@@ -1,0 +1,73 @@
+/* Container centralizado do modal */
+.modal-container {
+  display: none; 
+  position: fixed;
+  z-index: 1000;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+}
+
+/* Caixa do modal */
+.modal-content {
+  background-color: rgba(255, 255, 255, 0.1);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  color: white;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+}
+
+/* Botão fechar (X) */
+.close-btn {
+  position: absolute;
+  top: 10px; right: 15px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: white;
+}
+
+/* Ações (botões no rodapé) */
+.modal-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cancel-btn, .logout-btn {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Cancelar */
+.cancel-btn {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+.cancel-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Sair */
+.logout-btn {
+  background-color: #6a5acd;
+  color: white;
+  text-decoration: none;
+  text-align: center;
+  display: inline-block;
+}
+.logout-btn:hover {
+  background-color: #5a4ac7;
+}

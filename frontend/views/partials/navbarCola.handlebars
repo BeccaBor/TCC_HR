@@ -1,0 +1,66 @@
+
+<nav class="d-flex justify-content-between align-items-center p-3">
+     <img src="./img/Conecthar.png" alt="" height="60" width="190">
+  <div class="d-flex gap-5">
+    <a href="/colaborador/dados" class="btnNav btn btn-secondary">Inicio</a>
+    <a href="/documentacaoCola" class="btnNav btn btn-secondary">Documentação</a>
+    <a href="/solicitacoesCola" class="btnNav btn btn-secondary">Solicitações</a>
+  </div>
+<!-- Ícone com dropdown -->
+<div class="dropdown">
+  <a class="btn dropdown-toggle p-0 border-0 bg-transparent" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Minha Conta">
+    <i class="bi bi-person-circle fs-3"></i>
+  </a>
+
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><a class="dropdown-item" href="/perfil">Perfil</a></li>
+    <li><a class="dropdown-item" href="#" id="openLogoutModal">Sair</a></li>
+  </ul>
+</div>
+
+<!-- Modal de confirmação -->
+<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="logoutModalLabel">Confirmar saída</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body">
+        Tem certeza que deseja sair da sua conta?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" id="logoutBtn" class="btn btn-danger">Sair</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const openLogoutModalBtn = document.getElementById('openLogoutModal');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const logoutModalEl = document.getElementById('logoutModal');
+    const logoutModal = new bootstrap.Modal(logoutModalEl);
+
+    // Abre o modal ao clicar no link "Sair"
+    openLogoutModalBtn.addEventListener('click', (e) => {
+      e.preventDefault(); // evita navegação
+      logoutModal.show();
+    });
+
+    // Ao confirmar logout
+   document.getElementById('logoutBtn').addEventListener('click', async () => {
+  try {
+    await fetch('http://localhost:3001/logout', { method: 'POST' });
+  } catch (err) {
+    console.error('Erro no logout:', err);
+  } finally {
+    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
+    window.location.href = '/';
+  }
+});
+  });
+</script>

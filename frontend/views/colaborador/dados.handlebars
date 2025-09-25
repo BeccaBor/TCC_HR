@@ -1,0 +1,51 @@
+{{> navbarCola }}
+{{> sidebarCola }}
+
+{{#*inline "styles"}}
+<link rel="stylesheet" href="/css/colaborador.css">
+{{/inline}}
+
+<div class="container-fluid">
+  <div class="row">
+    <main class="col-md-10 p-4">
+  <h2>Visualizar Dados</h2>
+<p>Visualize seus dados pessoais e contratos ativos</p>
+
+<div class="cards">
+  <div class="card">Dados Pessoais <strong>0</strong></div>
+  <div class="card">Contratos Ativos <strong>0</strong></div>
+  <div class="card">Última Atualização <strong>DD/MM/AAAA</strong></div>
+</div>
+
+<section class="dados-pessoais">
+  <h3>Dados Pessoais</h3>
+  <form>
+    <label>Nome Completo <input type="text" value="Lorem ipsum sit amet"></label>
+    <label>CPF <input type="text" value="000.000.000-00"></label>
+    <label>Email <input type="email" value="lorem@email.com"></label>
+    <label>Telefone <input type="text" value="(00) 00000-0000"></label>
+    <label>Endereço <input type="text" value="Lorem ipsum dolor sit amet"></label>
+  </form>
+</section>
+
+<section class="contratos">
+  <h3>Contratos</h3>
+  <table>
+    <thead>
+      <tr><th>Contrato</th><th>Tipo</th><th>Data Início</th><th>Status</th><th>Ações</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>LL-0000-000</td>
+        <td>Mensal</td>
+        <td>DD/MM/AAAA</td>
+        <td><span class="ativo">Ativo</span></td>
+        <td>👁️ ⬇️</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+    </main>
+  </div>
+</div>

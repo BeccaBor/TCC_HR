@@ -1,0 +1,52 @@
+<link rel="stylesheet" href="/css/doc.css">
+<aside class="sidebar">
+  <h6 class="fw-bold mb-3">Categorias Documentação</h6>
+  <ul class="nav flex-column">
+    <!-- destaque ativo na nav lateral -->
+    <li class="side-item">
+      <a class="nav-link {{#ifCond categoria '==' 'contratos'}}active{{/ifCond}}" 
+         href="/documentacao?categoria=contratos">
+        <i class="bi bi-briefcase-fill me-2"></i>Contratos
+      </a>
+    </li>
+    <li class="side-item">
+      <a class="nav-link {{#ifCond categoria '==' 'recibos'}}active{{/ifCond}}" 
+         href="/documentacao?categoria=recibos">
+        <i class="bi bi-card-text me-2"></i>Recibos
+      </a>
+    </li>
+    <li class="side-item">
+      <a class="nav-link {{#ifCond categoria '==' 'ferias'}}active{{/ifCond}}" 
+         href="/documentacao?categoria=ferias">
+        <i class="bi bi-calendar me-2"></i>Comprov. de férias
+      </a>
+    </li>
+    <li class="side-item">
+      <a class="nav-link {{#ifCond categoria '==' 'atestados'}}active{{/ifCond}}" 
+         href="/documentacao?categoria=atestados">
+        <i class="bi bi-hospital me-2"></i>Atestados médicos
+      </a>
+    </li>
+    <li class="side-item">
+      <a class="nav-link {{#ifCond categoria '==' 'outros'}}active{{/ifCond}}" 
+         href="/documentacao?categoria=outros">
+        <i class="bi bi-folder-fill me-2"></i>Outros documentos
+      </a>
+    </li>
+  </ul>
+
+  <hr>
+
+  <h6 class="fw-bold mt-3">Ações rápidas</h6>
+  <ul class="nav flex-column">
+    <li class="nav-item">
+      <a class="nav-link" href="#"><i class="bi bi-search me-2"></i>Procurar Documentos</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#"><i class="bi bi-download me-2"></i>Recentes Download</a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link" href="#"><i class="bi bi-trash me-2"></i>Arquivados</a>
+    </li>
+  </ul>
+</aside>

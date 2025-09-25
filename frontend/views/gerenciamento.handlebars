@@ -1,0 +1,88 @@
+{{> navbar }}
+
+<main class="p-4">
+  <!-- Título -->
+  <h4>Gerenciar colaboradores</h4>
+  <p>Edite, exclua e registre departamentos e colaboradores</p>
+
+  <!-- Filtro -->
+  <div class="input-group mb-4">
+    <input type="text" class="form-control" placeholder="Buscar por colaborador/departamento">
+    <button class="btn btn-dark">Filtrar</button>
+    <select class="select">
+        <option value=""> Departamentos</option>
+    </select>
+  </div>
+
+  <!-- Conteúdo principal em 3 colunas -->
+  <div class="row">
+    <!-- Coluna 1: Lista de colaboradores -->
+    <div class="col-md-4">
+      <div class="p-3 border rounded-4 h-100">
+        <h5 class="mb-3">Setor: {{setorAtual}}</h5>
+        {{#each colaboradores}}
+          <input type="text" class="form-control mb-2" value="Nome: {{this.nome}}" disabled>
+        {{/each}}
+      </div>
+    </div>
+
+    <!-- Coluna 2: Detalhes do colaborador -->
+    <div class="col-md-4">
+      <div class="p-3 border rounded-4 text-center">
+        <div class="bg-secondary-subtle rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+          <i class="bi bi-camera fs-1 text-dark"></i>
+        </div>
+        <input type="text" class="form-control my-2" placeholder="Nome: {{colabSelecionado.nome}}" disabled>
+        <input type="text" class="form-control mb-2" placeholder="CPF: {{colabSelecionado.cpf}}" disabled>
+        <input type="text" class="form-control mb-4" placeholder="Matrícula: {{colabSelecionado.matricula}}" disabled>
+        <button class="btn btn-dark me-2">Excluir</button>
+        <button class="btn btn-secondary">Editar</button>
+      </div>
+    </div>
+
+    <!-- Coluna 3: Ações rápidas -->
+    <div class="col-md-4">
+      <div class="bg-light rounded-4 p-3 h-100">
+        <h6 class="fw-bold mb-3">Ações de gerenciamento</h6>
+        <ul class="nav flex-column">
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link text-dark"><i class="bi bi-trash me-2"></i>Apagados Recentes</a>
+          </li>
+          <li class="nav-item mb-2">
+            <a href="#" class="nav-link text-dark">Registrar Departamento</a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link text-dark">Registrar Colaborador</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</main>
+{{!-- <script>
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const token= localStorage.getItem("token") || sessionStorage.getItem("token")
+
+    if (!token){
+      //barra a pessoa que não tiver o token, vai fazer a pessoa voltar a pagina do login
+      window.location.href= "/"
+      return
+    }
+
+    //vai testar o token eno servidor pra evitar de ser expirado 
+
+    fetch("http://localhost:3001/colaborador/dados", {
+      headers: {"Authorization": `Bearer $ {token}`}
+    }).then(res=> {
+      if(!res.ok){
+        localStorage.removeItem("token")
+        sessionStorage.removeItem("token")
+        window.locationhref = "/"
+      }
+    })
+    .catch(()=>{
+      
+      window.location.href = "/"
+    })
+  })
+</script> --}}

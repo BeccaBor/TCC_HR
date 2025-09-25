@@ -1,0 +1,63 @@
+<link rel="stylesheet" href="/css/navbar.css">
+<nav class="navbar d-flex justify-content-between align-items-center p-3">
+     <img src="/img/Conecthar.png" alt="" height="20" width="113" style="margin-left: 27px;">
+  <div class="d-flex gap-5">
+    <a href="/gestor/documentacao" class="btnNav btn ">Documentação</a>
+    <a href="/gestor/folhadepagamento" class="btnNav btn">Folha de pagamento</a>
+    <a href="/gestor/beneficios" class="btnNav btn">Gerenciar Benefícios</a>
+    <a href="/gestor/solicitacoes" class="btnNav btn">Solicitações</a>
+    <a href="/gestor/gerenciamento" class="btnNav btn">Gerenciamento</a>
+    <a href="/gestor/gerenciarPonto" class="btnNav btn">Gerenciar ponto</a>
+  </div>
+<!-- Ícone com dropdown -->
+<div class="dropdown">
+  <a class="btn dropdown-toggle p-0 border-0 bg-transparent" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-person-circle fs-3"></i>
+  </a>
+
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><a class="dropdown-item" href="/perfil">Perfil</a></li>
+    <li><a class="dropdown-item" href="#" onclick="abrirModal()">Sair</a></li>
+  </ul>
+</div>
+
+<!-- Modal custom -->
+<div class="modal-container" id="logoutModal">
+  <div class="modal-content">
+    <span class="close-btn" onclick="fecharModal()">&times;</span>
+    <h2>Confirmar saída</h2>
+    <p>Tem certeza que deseja sair da sua conta?</p>
+    <div class="modal-actions">
+      <button class="cancel-btn" onclick="fecharModal()">Cancelar</button>
+      <a href="/logout" class="logout-btn">Sair</a>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+  const modal = document.getElementById("logoutModal");
+
+  window.abrirModal = function() {
+    modal.style.display = "flex";
+  }
+
+  window.fecharModal = function() {
+    modal.style.display = "none";
+  }
+
+  window.onclick = function(event) {
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  }
+});
+
+function abrirModal() {
+  const modal = document.getElementById("logoutModal");
+  modal.style.display = "flex"; // só abre quando clicar
+}
+
+</script>
+</nav>
+<div class="linha"></div>
+<br>

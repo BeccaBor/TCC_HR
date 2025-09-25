@@ -1,0 +1,141 @@
+{{> navbar }}
+
+<main class="container-fluid p-4">
+    <h4>Aprovar Solicitações</h4>
+    <p>Gerencie e aprove solicitações de colaboradores</p>
+
+    <!-- Filtros -->
+      <div class="cSOl container-fluid p-4">
+         <div class="row g-3 ">
+    <div class="card p-3 mb-4">
+        <div class="row g-2">
+            <div class="col-md-4">
+                <input type="text" class="form-control" placeholder="Buscar por colaborador">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select">
+                    <option>Todos os tipos</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select">
+                    <option>Todos os status</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-dark w-100">Filtrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de solicitações -->
+    {{#each solicitacoes}}
+    <div class="card mb-4 p-3">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="d-flex align-items-center mb-2">
+                    <i class="bi bi-person-circle me-2 fs-4"></i>
+                    <div>
+                        <strong>{{this.nome}}</strong><br>
+                        <small class="text-muted">Departamento: {{this.departamento}}</small><br>
+                        <span class="badge bg-secondary mt-1">{{this.status}}</span>
+                    </div>
+                </div>
+
+                {{#if (eq this.tipo "ferias")}}
+                <p class="mb-1"><i class="bi bi-calendar"></i> Pedido de Férias</p>
+                <p class="mb-1">Período: {{this.periodo}}</p>
+                {{else if (eq this.tipo "dados")}}
+                <p class="mb-1"><i class="bi bi-pencil"></i> Atualização de Dados</p>
+                <p class="mb-1">Telefone: {{this.telefone}}</p>
+                <p class="mb-1">Endereço: {{this.endereco}}</p>
+                {{/if}}
+
+                <p class="mb-2">Motivo: {{this.motivo}}</p>
+
+                {{#if (eq this.status "Pendente")}}
+                <button class="btn btn-outline-secondary btn-sm me-2">✔ Aprovar</button>
+                <button class="btn btn-outline-secondary btn-sm me-2">✖ Rejeitar</button>
+                <button class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal"
+                    data-bs-target="#modal-{{@index}}">
+                    ✱ Detalhes
+                </button>
+                {{else}}
+                <p class="text-muted">Aprovado por: Você</p>
+                {{/if}}
+            </div>
+            <div class="text-end">
+                <small class="text-muted">Solicitado em <br> {{this.data}}</small>
+            </div>
+        </div>
+    </div>
+    <!-- Modal de detalhes -->
+    <div class="modal fade" id="modal-{{@index}}" tabindex="-1" aria-labelledby="modalLabel-{{@index}}"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalLabel-{{@index}}">Detalhes da Solicitação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>Nome:</strong> {{this.nome}}</p>
+                    <p><strong>Departamento:</strong> {{this.departamento}}</p>
+                    <p><strong>Status:</strong> {{this.status}}</p>
+                    <p><strong>Tipo:</strong> {{this.tipo}}</p>
+                    {{#if (eq this.tipo "ferias")}}
+                    <p><strong>Período:</strong> {{this.periodo}}</p>
+                    {{else if (eq this.tipo "dados")}}
+                    <p><strong>Telefone:</strong> {{this.telefone}}</p>
+                    <p><strong>Endereço:</strong> {{this.endereco}}</p>
+                    {{/if}}
+                    <p><strong>Motivo:</strong> {{this.motivo}}</p>
+                    <p><strong>Solicitado em:</strong> {{this.data}}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{/each}}
+
+    <!-- Paginação -->
+    <div class="d-flex justify-content-end align-items-center mt-4">
+        <p class="me-3">Mostrando 1 a 3 de 00 solicitações</p>
+        <button class="btn btn-outline-secondary me-2">Antes</button>
+        <button class="btn btn-secondary  me-1" disabled>1</button>
+        <button class="btn btn-light me-1">2</button>
+        <button class="btn btn-light me-1">3</button>
+        <button class="btn btn-outline-secondary">Próxima</button>
+    </div>
+    </div>
+</main>
+{{!-- <script>
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const token= localStorage.getItem("token") || sessionStorage.getItem("token")
+
+    if (!token){
+      //barra a pessoa que não tiver o token, vai fazer a pessoa voltar a pagina do login
+      window.location.href= "/"
+      return
+    }
+
+    //vai testar o token eno servidor pra evitar de ser expirado 
+
+    fetch("http://localhost:3001/colaborador/dados", {
+      headers: {"Authorization": `Bearer $ {token}`}
+    }).then(res=> {
+      if(!res.ok){
+        localStorage.removeItem("token")
+        sessionStorage.removeItem("token")
+        window.locationhref = "/"
+      }
+    })
+    .catch(()=>{
+      
+      window.location.href = "/"
+    })
+  })
+</script> --}}

@@ -1,0 +1,166 @@
+{{#*inline "styles"}}
+<link rel="stylesheet" href="/css/home.css">
+{{/inline}}
+
+<div class="containerHome container-fluid p-4">
+  <nav class="d-flex justify-content-between align-items-center mb-5">
+    <img src="/img/Conecthar.png" alt="Conecthar" height="60" width="190">
+
+    <div class="d-flex gap-5">
+      <a href="#" class="text-white text-decoration-none">COMUNIDADE</a>
+      <a href="#" class="text-white text-decoration-none">CONTATE-NOS</a>
+    </div>
+
+    <div class="d-flex gap-3">
+      <p class="text-white">Faça login como:</p>
+      <button class="btnGESTOR btn btn-outline-light" onclick="abrirPopup('gestor')">GESTOR</button>
+      <button class="btnCOLAB btn btn-outline-light" onclick="abrirPopup('colaborador')">COLABORADOR</button>
+    </div>
+  </nav>
+
+  <div class="row align-items-center">
+    <div class="col-md-6 text-white">
+      <h1 class="display-4">RENOVE SEU FUTURO</h1>
+      <h3>Comece com <span>CONECTHAR</span></h3>
+      <h3>mantenha-se conectado</h3>
+      <button class="btnSaibaMais btn btn-outline-light">Saiba Mais</button>
+      <button class="btnEmpresa btn btn-outline-light" onclick="abrirPopup('empresa')">Cadastre sua empresa</button>
+    </div>
+  </div>
+</div>
+
+<!-- Popup -->
+<div id="overlay" style="display:none;">
+  <div id="popup">
+    <span class="close-btn" onclick="fecharPopup()">&times;</span>
+    <h3 id="popupTitle"></h3>
+    <form id="popupForm"></form>
+  </div>
+</div>
+
+<script>
+const overlay = document.getElementById("overlay");
+const popupTitle = document.getElementById("popupTitle");
+const popupForm = document.getElementById("popupForm");
+
+// Backend URL seguro
+const BACKEND_URL = "{{BACKEND_URL}}" || "http://localhost:3001";
+
+// Abrir popup
+function abrirPopup(tipo) {
+  overlay.style.display = "flex";
+  popupTitle.textContent = "";
+  popupForm.innerHTML = "";
+
+  const tipoLower = tipo.toLowerCase();
+
+  if (tipoLower === "gestor" || tipoLower === "colaborador") {
+    popupTitle.textContent = `Login ${tipoLower === "gestor" ? "Gestor" : "Colaborador"}`;
+    popupForm.innerHTML = `
+      <input id="cnpj" type="text" placeholder="CNPJ" required>
+      <input id="registro" type="text" placeholder="Número de registro" required>
+      <input id="senha" type="password" placeholder="Senha" required>
+      <button type="submit">Entrar</button>
+    `;
+
+    popupForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const cnpj = document.getElementById("cnpj").value.trim();
+      const registro = document.getElementById("registro").value.trim();
+      const senha = document.getElementById("senha").value.trim();
+
+      if (!cnpj || !registro || !senha) {
+        alert("Todos os campos são obrigatórios!");
+        return;
+      }
+
+      const sucesso = await loginUsuario(cnpj, registro, senha);
+      if (sucesso) fecharPopup();
+    };
+
+  } else if (tipoLower === "empresa") {
+    popupTitle.textContent = "Cadastro de Empresa";
+    popupForm.innerHTML = `
+      <input id="nomeEmpresa" type="text" placeholder="Nome da empresa" required>
+      <input id="cnpjEmpresa" type="text" placeholder="CNPJ" required>
+      <input id="senhaEmpresa" type="password" placeholder="Senha" required>
+      <button type="submit">Cadastrar</button>
+    `;
+
+    popupForm.onsubmit = async (e) => {
+      e.preventDefault();
+      const nomeEmpresa = document.getElementById("nomeEmpresa").value.trim();
+      const cnpj = document.getElementById("cnpjEmpresa").value.trim();
+      const senha = document.getElementById("senhaEmpresa").value.trim();
+
+      if (!nomeEmpresa || !cnpj || !senha) {
+        alert("Todos os campos são obrigatórios!");
+        return;
+      }
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/registerEmpresa`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nomeEmpresa, cnpj, senha })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          alert(`Empresa cadastrada com sucesso!\nRegistro do gestor: ${data.registroGestor}`);
+          fecharPopup();
+        } else {
+          alert(data.message || data.erro || "Erro interno no servidor ou rota incorreta.");
+        }
+      } catch (err) {
+        console.error("Erro na requisição:", err);
+        alert("Erro de conexão com o servidor");
+      }
+    };
+  }
+}
+
+// Fechar popup
+function fecharPopup() {
+  overlay.style.display = "none";
+}
+
+// Função de login genérica
+async function loginUsuario(cnpj, registro, senha) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cnpj, registro, senha })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      localStorage.setItem("token", data.token);
+
+      // Redirecionamento baseado no tipo real do usuário
+      const tipoUsuario = data.usuario.tipo_usuario.toLowerCase();
+      if (tipoUsuario === "gestor") {
+        window.location.href = "/gestor/documentacao"; // <<<<< Redirecionamento corrigido
+      } else if (tipoUsuario === "colaborador") {
+        window.location.href = "/colaborador/holerites";
+      } else {
+        alert("Tipo de usuário desconhecido.");
+      }
+
+      return true;
+    } else {
+      alert(data.erro || "Número de registro, CNPJ ou senha incorretos.");
+      return false;
+    }
+  } catch (err) {
+    console.error("Erro na requisição:", err);
+    alert("Erro de conexão com o servidor.");
+    return false;
+  }
+}
+</script>
+<script src="/js/verificarLogin.js"></script>
+

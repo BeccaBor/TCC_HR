@@ -1,0 +1,125 @@
+/* ===== Layout base (2 colunas: sidebar + conteúdo) ===== */
+.cola-layout {
+    display: grid;
+    grid-template-columns: 280px minmax(0, 1fr);
+    min-height: 100vh;
+    /* background: #f8f8fb; */
+  }
+  
+  /* ===== Sidebar fixa/sticky ===== */
+  .sidebar {
+    position: sticky;
+    /* “gruda” no topo enquanto rola */
+    top: 0;
+    align-self: start;
+    /* necessário p/ sticky dentro do grid */
+    height: 100vh;
+    /* ocupa a altura toda */
+    overflow-y: auto;
+    padding: 24px 16px;
+    background: #fff;
+    border-right: 1px solid #eaeaea;
+    background-color: #ffffff69;
+    border: 3px solid #ffffff8c;
+    border-radius: 25px;
+    box-shadow: 0 10px 15px rgb(50, 50, 77), inset 2px 0px 5px rgba(50, 50, 77, 0.685);
+  
+    
+  
+  }
+  
+  .sidebar h3 {
+    font-size: 0.95rem;
+    margin: 10px 0 6px;
+    color: #555;
+  }
+  
+  .sidebar ul {
+    list-style: none;
+    margin: 8px 0 18px;
+    padding: 0;
+  }
+  
+  .sidebar a {
+    display: block;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #333;
+    text-decoration: none;
+    color: inherit;
+  }
+  
+  .sidebar a:hover {
+    background: #f3f3f7;
+  }
+  
+  .sidebar a.active {
+    background: #8a87b99c;
+    /* border: 2px solid #ffffff9c; */
+    color: #ffffff;
+    font-weight: 600;
+    gap: 2px;
+    box-shadow: inset 5px 5px 5px rgba(50, 50, 77, 0.329);
+  }
+  
+  /* ===== Conteúdo ===== */
+  .content {
+    padding: 24px;
+    overflow: auto;
+    /* quem rola é o conteúdo, não a sidebar */
+    /* background: #f8f8fb; */
+  }
+  
+  /* ===== Responsivo ===== */
+  @media (max-width: 992px) {
+    .cola-layout {
+      grid-template-columns: 1fr;
+      /* empilha */
+    }
+  
+    .sidebar {
+      position: static;
+      height: auto;
+      border-right: 0;
+      border-bottom: 1px solid #eaeaea;
+    }
+  }
+  
+  .cola-layout.has-navbar .sidebar {
+    top: 64px;
+    height: calc(100vh - 64px);
+  }
+  
+  .side-item {
+    /* color: #45466B; */
+    /* background-color: #fff; */
+    /* border: 2px solid #ddd; */
+   border-radius: 18px;
+    /* padding: 10px 20px;  */
+    font-size: 16px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
+    /* Box-shadow à direita */
+  margin-bottom: 8px;
+  }
+  
+  .side-item::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 2px;
+      background-color: #141153;
+      transition: width 0.4s ease;
+    }
+    
+  .side-item:hover::before {
+      width: 100%;
+    }
+
+    

@@ -1,0 +1,123 @@
+{{!-- Navbar global --}}
+{{> navbar }}
+
+<link rel="stylesheet" href="/css/gerenciarPonto.css" />
+
+<section class="gerenciar-wrapper">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <button id="abrirPopup" class="btn-big">Marcar ponto</button>
+
+    <div class="filtros">
+      <h4>Filtros:</h4>
+      <button class="filter-btn">Visualizar por setor</button>
+      <button class="filter-btn">Visualizar total</button>
+    </div>
+
+    <div class="ultimos-pontos">
+      <h4>Seus últimos pontos:</h4>
+      <div id="listaUltimosPontos">
+        <div class="placeholder">Sem registros ainda.</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Panel -->
+  <section class="main-panel">
+
+    <!-- Cards de resumo -->
+    <div class="card-row">
+      <div class="card summary">Quadro de jornada:</div>
+      <div class="card info">
+        <div class="tag">Setor ADM</div>
+        <div class="tag">Setor ADM</div>
+        <div class="tag">Setor ADM</div>
+        <div class="tag">Setor ADM</div>
+      </div>
+    </div>
+
+    <!-- Info row -->
+    <div class="info-row">
+      <div class="small-card">
+        <div class="label">QTR horas totais:</div>
+        <div class="value" id="qtrTotal">XXXXXX</div>
+        <button class="small-btn" id="verDetalhes1">Ver detalhes</button>
+      </div>
+
+      <div class="small-card">
+        <div class="label">QTR horas faltantes:</div>
+        <div class="value" id="qtrFaltante">XXXXXX</div>
+        <button class="small-btn" id="verDetalhes2">Ver detalhes</button>
+      </div>
+    </div>
+
+    <!-- Seção de registros -->
+    <div class="registros-section">
+      <div class="registros-header">
+        <h4>Últimos registros da empresa:</h4>
+        <button id="btnAtualizar" class="btn-small">Atualizar últimos registros</button>
+      </div>
+      <div id="tabelaRegistros" class="tabela">
+        <div class="placeholder">Nenhum registro carregado.</div>
+      </div>
+    </div>
+
+  </section>
+</section>
+
+<!-- POPUP -->
+<div id="overlay" class="overlay" style="display: none;">
+  <div class="popup">
+    <!-- Botão fechar -->
+    <div id="fecharPopup" class="close-btn">&times;</div>
+
+    <!-- Título -->
+    <h3 class="popup-title">Folha de registro de ponto</h3>
+
+    <!-- Formulário -->
+    <form id="formPonto" class="form-ponto">
+
+      <!-- Nome -->
+      <label for="nome">Nome</label>
+      <input type="text" id="nome" name="nome" placeholder="Nome completo" required>
+
+      <!-- Setor -->
+      <label for="setor">Setor</label>
+      <input type="text" id="setor" name="setor" placeholder="Setor (ex: ADM)">
+
+      <!-- Tipo de usuário -->
+      <label for="tipo_usuario">Tipo de usuário</label>
+      <input type="text" id="tipo_usuario" name="tipo_usuario" value="gestor" readonly>
+
+      <!-- Campos hidden -->
+      <input type="hidden" id="tipo_registro" name="tipo_registro">
+      <input type="hidden" id="horas" name="horas">
+
+      <!-- Tipo de registro -->
+      <label>Tipo de registro</label>
+      <div class="tipo-group">
+        <button type="button" class="tipo-btn">Saída</button>
+        <button type="button" class="tipo-btn">Entrada</button>
+        <button type="button" class="tipo-btn">Início intervalo</button>
+        <button type="button" class="tipo-btn">Fim intervalo</button>
+      </div>
+
+      <!-- Quantidade de horas -->
+      <label>Quantidade de horas</label>
+      <div class="tipo-group">
+        <button type="button" class="hora-btn">8 horas</button>
+        <button type="button" class="hora-btn">6 horas</button>
+      </div>
+
+      <!-- Botão submit -->
+      <div class="form-actions">
+        <button type="submit" class="btn-submit">Marcar ponto</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<!-- Script -->
+<script src="/js/pontoScript.js"></script>

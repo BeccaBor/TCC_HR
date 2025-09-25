@@ -1,0 +1,107 @@
+logins pre pronto pq vai facilitar minha vida hahha
+
+No *headers* não esquece:
+Key: content-type 
+value: application/json
+
+membro gestor (utilizando o postman):
+metodo: post
+url: http://localhost:3000/membro-gestor/register
+raw:
+{
+    "nome": "gestor",
+	"email": "gestor01@gmail.com",
+    "setor" : "desenvolvedor",
+    "senha": "abcd01234"
+}
+
+
+colaborador:
+metodo: post
+url: http://localhost:3000/colaborador/register
+raw:
+{
+    "nome": "teste1",
+    "email": "testeup01@gmail.com",
+    "cargo" : "colaborador",
+    "senha": "abcd01234"
+}
+
+Agr pra fazer login vamos lar
+metodo: post
+url: http://localhost:3000/login
+raw:
+{
+  
+    "email": "testeup01@gmail.com", //esse é do colaborador, para acessar do gestor só colocar o email dele :D
+    "senha": "abcd01234"
+}
+
+
+
+Crie uma nova requisição para Upload:
+
+Método: POST
+URL: http://localhost:3000/colaborador/upload
+Headers:
+Authorization: Bearer SEU_TOKEN_DO_COLABORADOR_AQUI (cole o token copiado).
+
+IMPORTANTE: NÃO adicione um Content-Type manual. O Postman o definirá automaticamente para multipart/form-data quando você adicionar um campo de arquivo no Body.
+
+Body:
+
+Selecione a opção form-data.
+
+Adicione um campo para o arquivo:
+
+KEY: documento (este é o nome do campo que o uploadMiddleware.single('documento') espera).
+VALUE: Clique no ícone ao lado (geralmente um quadrado com setas para baixo) e mude o tipo de "Text" para "File". Depois, clique em "Select Files" e escolha um arquivo (ex: .pdf, .png, .jpg, .doc, .docx) do seu computador.
+Adicione outro campo para o tipo de documento:
+KEY: tipo_documento
+VALUE: Atestado de Aptidão Física (ou qualquer descrição relevante para o seu teste).
+
+
+Teste 2: Colaborador - Listar Meus Uploads
+Objetivo: Verificar se o colaborador pode ver a lista dos documentos que ele mesmo fez upload.
+
+Token Necessário: O mesmo token JWT de colaborador do teste anterior.
+
+Use o mesmo token de Colaborador do Teste 1.
+
+Crie uma nova requisição:
+
+Método: GET
+
+URL: http://localhost:3000/colaborador/uploads
+
+Headers:
+
+Authorization: Bearer SEU_TOKEN_DO_COLABORADOR_AQUI
+
+Envie a requisição.
+
+Verifique a Resposta no Postman:
+
+Esperar um Status: 200 OK.
+
+
+
+app.post(
+    '/gestor/holerites', // Rota para o gestor adicionar holerites
+    verificarToken,
+    autorizarTipoUsuario(['membro_gestor']), // Apenas gestor pode adicionar holerites
+    holeriteController.adicionarHolerite
+);
+
+
+*Sobre "mudar o nome da tabela no phpMyAdmin":* (vai que eu preciso de novo, nunca se sabe)
+
+se você precisasse mudar o nome de uma tabela no phpMyAdmin:
+
+Selecione o banco de dados.
+
+Selecione a tabela na lista.
+
+Vá na aba "Operations" (Operações).
+
+Na seção "Rename table to" (Renomear tabela para), você pode digitar o novo nome e clicar em "Go" (Executar).

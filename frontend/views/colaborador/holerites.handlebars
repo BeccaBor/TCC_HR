@@ -1,0 +1,36 @@
+{{> navbarCola }}
+{{> sidebarCola }}
+{{#*inline "styles"}}
+<link rel="stylesheet" href="/css/colaborador.css">
+{{/inline}}
+<h2>Holerites e Documentos</h2>
+<p>Visualize e baixe seus holerites, comprovantes e documentos</p>
+
+<div class="filtros">
+  <select>
+    <option>Todos os tipos</option>
+  </select>
+  <select>
+    <option>Últimos 12 meses</option>
+  </select>
+  <input type="text" placeholder="Buscar documentos...">
+  <button>⬇️ Baixar todos</button>
+</div>
+
+<div class="holerites-grid">
+  <div class="holerite-card">
+    <h4>Holerite MM/AAAA</h4>
+    <p>Folha de pagamento</p>
+    <p>Data: DD/MM/AAAA</p>
+    <p>Tamanho: X.X MB</p>
+    <button>👁️ Visualizar</button>
+    <button>⬇️</button>
+  </div>
+</div>
+
+<div class="paginacao">
+  <button>◀ Antes</button>
+  <button>1</button>
+  <button>2</button>
+  <button>▶ Próxima</button>
+</div>

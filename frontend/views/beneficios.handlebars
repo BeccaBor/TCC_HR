@@ -1,0 +1,147 @@
+{{> navbar }}
+
+<main class="container-fluid p-4">
+ <div class="d-flex justify-content-between align-items-start mb-4">
+  <div>
+    <h4>Gerenciar benefício</h4>
+    <p class="text-muted">
+      Gerencie vale-transporte, vale-alimentação, plano de saúde e outros benefícios
+    </p>
+  </div>
+
+  <button class="btn btn-dark h-50 align-self-start">
+    <i class="bi bi-plus-circle me-2"></i>Criar novo benefício
+  </button>
+</div>
+{{!--  --}}
+
+  <div class="cBF container-fluid">
+    <div class="row g-3 my-4">
+      <div class="col-md-4">
+        <div class="card text-left p-3">
+          <h6>Total de beneficios</h6>
+          <h3>0</h3>
+          <small class="text-muted">Benefícios ativos</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-left p-3">
+          <h6>Valor total mensal</h6>
+          <h3>R$ 00.000</h3>
+          <small class="text-muted">Custo mensal</small>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card text-left p-3">
+          <h6>Funcionarios atendidos</h6>
+          <h3>0</h3>
+          <small class="text-muted">Com benefícios</small>
+        </div>
+      </div>
+    </div>
+
+<br>
+
+<div class="table-wrapper rounded-3 overflow-hidden border">
+  <div class="table-responsive">
+    <table class="table table-bordered align-middle mb-0">
+      
+      <!-- Primeira linha de cabeçalho personalizada -->
+      <thead>
+        <tr>
+          <th colspan="6">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Lista de Benefícios</h5>
+              <div class="d-flex gap-5">
+                <a class="btn btn-outline-secondary" href="#">
+                  <i class="bi bi-search me-2"></i>Procurar Benefícios
+                </a>
+                <select class="form-select">
+                  <option>Todos os tipos</option>
+                </select>
+              </div>
+            </div>
+          </th>
+        </tr>
+      </thead>
+
+      <!-- Linha normal de cabeçalho -->
+      <thead class="table-secondary">
+        <tr>
+          <th>Benefício</th>
+          <th>Tipo</th>
+          <th>Valor</th>
+          <th>Funcionários</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {{#each beneficios}}
+        <tr>
+          <td>
+            <i class="bi {{this.icone}} me-2"></i>
+            <strong>{{this.nome}}</strong><br>
+            <small class="text-muted">{{this.descricao}}</small>
+          </td>
+          <td>{{this.tipo}}</td>
+          <td>{{this.valor}}</td>
+          <td>
+            {{this.funcionarios}}
+            <button class="btn btn-sm btn-light ms-1">Ver</button>
+          </td>
+          <td><span class="badge bg-success">{{this.status}}</span></td>
+          <td>
+            <button class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-trash"></i>
+            </button>
+          </td>
+        </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </div>
+</div>
+  <!-- Paginação -->
+  <div class="d-flex justify-content-end align-items-center mt-3">
+    <p class="me-3">Mostrando 1 a 3 de XX benefícios</p>
+    <button class="btn btn-outline-secondary me-2">Antes</button>
+    <button class="btn btn-secondary me-2" disabled>1</button>
+    <button class="btn btn-light me-2" >2</button>
+    <button class="btn btn-light me-2">3</button>
+    <button class="btn btn-outline-secondary style="color: black;"">Próxima</button>
+  </div>
+  </div>
+</main>
+
+{{!-- <script>
+  document.addEventListener("DOMContentLoaded", ()=>{
+    const token= localStorage.getItem("token") || sessionStorage.getItem("token")
+
+    if (!token){
+      //barra a pessoa que não tiver o token, vai fazer a pessoa voltar a pagina do login
+      window.location.href= "/"
+      return
+    }
+
+    //vai testar o token eno servidor pra evitar de ser expirado 
+
+    fetch("http://localhost:3001/colaborador/dados", {
+      headers: {"Authorization": `Bearer $ {token}`}
+    }).then(res=> {
+      if(!res.ok){
+        localStorage.removeItem("token")
+        sessionStorage.removeItem("token")
+        window.locationhref = "/"
+      }
+    })
+    .catch(()=>{
+      
+      window.location.href = "/"
+    })
+  })
+</script> --}}

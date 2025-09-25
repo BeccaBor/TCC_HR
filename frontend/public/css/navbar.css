@@ -1,0 +1,152 @@
+/* .navbar{
+  position: sticky;
+  z-index: 1000;
+  top: 0;
+  background: rgb(255, 255, 255);
+} */
+.btnNav {
+    color: #45466B;
+    background-color: #fff;
+    /* border: 2px solid #ddd; */
+    border-radius: 18px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 3px 3px 3px rgba(50, 50, 77, 0.329);
+    /* box-shadow: 4px 0 5px rgba(0, 0, 0, 0.2); */
+}
+
+.btnNav:hover {
+    background-color: #d0cddd;
+    /* Cor de fundo roxa clarinha */
+}
+
+.btnNav::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 2px;
+    background-color: #141153;
+    transition: width 0.4s ease;
+}
+
+.btnNav:hover::before {
+    width: 100%;
+}
+
+.linha {
+    border-bottom: 2px solid #ffffff;
+    box-shadow: 0px 0px 8px rgba(105, 105, 105, 0.3);
+}
+
+
+/* fundo escuro por trás */
+.modal-container {
+  display: none; /* mantém escondido por padrão */
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.6);
+  justify-content: center;
+  align-items: center;
+  /* display: flex; <- REMOVER */
+}
+
+
+/* caixinha estilo vidro */
+.modal-content {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2rem;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6),
+              inset 0 0 30px rgba(255, 255, 255, 0.05);
+  text-align: center;
+  animation: modalFade 0.35s ease;
+  position: relative;
+  backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+}
+
+/* título */
+.modal-content h2 {
+  font-size: 1.5rem;
+  margin-bottom: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+/* texto */
+.modal-content p {
+  font-size: 1rem;
+  margin-bottom: 1.8rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* botões */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.modal-actions button,
+.modal-actions a {
+  flex: 1;
+  padding: 0.75rem;
+  border-radius: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+/* hover */
+.modal-actions button:hover,
+.modal-actions a:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: translateY(-2px);
+}
+
+/* botão sair mais forte */
+.logout-btn {
+  background: #6a5acd;
+  border: 1px solid #5a4ac7;
+}
+
+.logout-btn:hover {
+  background: #5a4ac7;
+}
+
+/* botão de fechar (X) */
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 1.6rem;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+/* animação */
+@keyframes modalFade {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
