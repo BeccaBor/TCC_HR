@@ -1,123 +1,136 @@
 {{!-- Navbar global --}}
-{{> navbar }}
 
-<link rel="stylesheet" href="/css/gerenciarPonto.css" />
+<link rel="stylesheet" href="/css/gerenciarPonto.css">
+  {{> navbar }}
+<section class="container-gestao">
 
-<section class="gerenciar-wrapper">
 
   <!-- Sidebar -->
   <aside class="sidebar">
-    <button id="abrirPopup" class="btn-big">Marcar ponto</button>
+    <button class="btn-primary" data-bs-toggle="modal" data-bs-target="#modalPonto">Marcar ponto</button>
 
-    <div class="filtros">
+    {{!-- <div class="box">
       <h4>Filtros:</h4>
-      <button class="filter-btn">Visualizar por setor</button>
-      <button class="filter-btn">Visualizar total</button>
-    </div>
+      <button class="btn-secondary">Visualizar por setor</button>
+      <button class="btn-secondary">Visualizar total</button>
+    </div> --}}
 
-    <div class="ultimos-pontos">
+    <div class="box">
       <h4>Seus últimos pontos:</h4>
-      <div id="listaUltimosPontos">
-        <div class="placeholder">Sem registros ainda.</div>
-      </div>
+      <table class="tabela-ultimos-pontos">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Horas</th>
+            <th>Data</th>
+          </tr>
+        </thead>
+        <tbody id="listaUltimosPontos">
+          <tr><td colspan="3">Carregando...</td></tr>
+        </tbody>
+      </table>
     </div>
   </aside>
 
-  <!-- Main Panel -->
+  <!-- Painel principal -->
   <section class="main-panel">
-
-    <!-- Cards de resumo -->
+    
+    <!-- Quadro de jornada -->
     <div class="card-row">
-      <div class="card summary">Quadro de jornada:</div>
-      <div class="card info">
+      <h4>Quadro de jornada:</h4>
+      <div class="jornada-tags">
         <div class="tag">Setor ADM</div>
-        <div class="tag">Setor ADM</div>
-        <div class="tag">Setor ADM</div>
-        <div class="tag">Setor ADM</div>
+        <div class="tag">Setor RH</div>
+        <div class="tag">Setor Financeiro</div>
+        <div class="tag">Setor Operacional</div>
       </div>
     </div>
 
-    <!-- Info row -->
-    <div class="info-row">
-      <div class="small-card">
+    <!-- Informações -->
+    <div class="info-row info-boxes">
+      <div class="info-card">
         <div class="label">QTR horas totais:</div>
-        <div class="value" id="qtrTotal">XXXXXX</div>
-        <button class="small-btn" id="verDetalhes1">Ver detalhes</button>
+        <div class="value" id="qtrTotal">0</div>
+        {{!-- <button class="btn-secondary" id="verDetalhes1">Ver detalhes</button> --}}
       </div>
 
-      <div class="small-card">
+      <div class="info-card">
         <div class="label">QTR horas faltantes:</div>
-        <div class="value" id="qtrFaltante">XXXXXX</div>
-        <button class="small-btn" id="verDetalhes2">Ver detalhes</button>
+        <div class="value" id="qtrFaltante">220</div>
+        {{!-- <button class="btn-secondary" id="verDetalhes2">Ver detalhes</button> --}}
       </div>
     </div>
 
-    <!-- Seção de registros -->
+    <!-- Últimos registros -->
     <div class="registros-section">
-      <div class="registros-header">
-        <h4>Últimos registros da empresa:</h4>
-        <button id="btnAtualizar" class="btn-small">Atualizar últimos registros</button>
+      <div class="registros-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h4>Últimos registros da empresa</h4>
+        <button id="btnAtualizar" class="btn-small">Atualizar registros</button>
       </div>
       <div id="tabelaRegistros" class="tabela">
-        <div class="placeholder">Nenhum registro carregado.</div>
+        <div class="placeholder">Carregando...</div>
       </div>
     </div>
 
+    <div id="alertContainer" class="mt-3"></div>
   </section>
 </section>
 
-<!-- POPUP -->
-<div id="overlay" class="overlay" style="display: none;">
-  <div class="popup">
-    <!-- Botão fechar -->
-    <div id="fecharPopup" class="close-btn">&times;</div>
+<!-- MODAL Bootstrap -->
+{{!-- O modal permanece o mesmo --}}
 
-    <!-- Título -->
-    <h3 class="popup-title">Folha de registro de ponto</h3>
-
-    <!-- Formulário -->
-    <form id="formPonto" class="form-ponto">
-
-      <!-- Nome -->
-      <label for="nome">Nome</label>
-      <input type="text" id="nome" name="nome" placeholder="Nome completo" required>
-
-      <!-- Setor -->
-      <label for="setor">Setor</label>
-      <input type="text" id="setor" name="setor" placeholder="Setor (ex: ADM)">
-
-      <!-- Tipo de usuário -->
-      <label for="tipo_usuario">Tipo de usuário</label>
-      <input type="text" id="tipo_usuario" name="tipo_usuario" value="gestor" readonly>
-
-      <!-- Campos hidden -->
-      <input type="hidden" id="tipo_registro" name="tipo_registro">
-      <input type="hidden" id="horas" name="horas">
-
-      <!-- Tipo de registro -->
-      <label>Tipo de registro</label>
-      <div class="tipo-group">
-        <button type="button" class="tipo-btn">Saída</button>
-        <button type="button" class="tipo-btn">Entrada</button>
-        <button type="button" class="tipo-btn">Início intervalo</button>
-        <button type="button" class="tipo-btn">Fim intervalo</button>
+<!-- MODAL Bootstrap -->
+<div class="modal fade" id="modalPonto" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content popup">
+      <div class="modal-header">
+        <h5 class="modal-title">Folha de registro de ponto</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
+      <div class="modal-body">
+        <div id="alertPopup" class="alert d-none"></div>
 
-      <!-- Quantidade de horas -->
-      <label>Quantidade de horas</label>
-      <div class="tipo-group">
-        <button type="button" class="hora-btn">8 horas</button>
-        <button type="button" class="hora-btn">6 horas</button>
+        <form id="formPonto" class="form-ponto">
+          <label for="nome">Nome</label>
+          <input type="text" id="nome" readonly>
+
+          <label for="setor">Setor</label>
+          <input type="text" id="setor" readonly>
+
+          <label for="tipo_usuario">Tipo de usuário</label>
+          <input type="text" id="tipo_usuario" readonly>
+
+          <input type="hidden" id="tipo_registro">
+          <input type="hidden" id="cnpj" value="{{usuario.cnpj}}">
+          <input type="hidden" id="usuario_id" value="{{usuario.id}}">
+
+          <label>Tipo de registro</label>
+          <div class="tipo-group">
+            <button type="button" class="tipo-btn" data-tipo="entrada">Entrada</button>
+            <button type="button" class="tipo-btn" data-tipo="saida">Saída</button>
+            <button type="button" class="tipo-btn" data-tipo="inicio_intervalo">Início intervalo</button>
+            <button type="button" class="tipo-btn" data-tipo="fim_intervalo">Fim intervalo</button>
+          </div>
+
+          <label>Quantidade de horas</label>
+          <div class="tipo-group">
+            <input type="number" id="inputHoras" step="0.01" min="0.01" max="24" placeholder="Ex: 8.50" required>
+            <div class="hora-btn-group">
+              <button type="button" class="hora-btn" data-horas="8">8h</button>
+              <button type="button" class="hora-btn" data-horas="6">6h</button>
+              <button type="button" class="hora-btn" data-horas="4">4h</button>
+            </div>
+          </div>
+
+          <div class="form-actions mt-3 text-center">
+            <button type="submit" class="btn-primary">Marcar ponto</button>
+          </div>
+        </form>
       </div>
-
-      <!-- Botão submit -->
-      <div class="form-actions">
-        <button type="submit" class="btn-submit">Marcar ponto</button>
-      </div>
-
-    </form>
+    </div>
   </div>
 </div>
 
-<!-- Script -->
 <script src="/js/pontoScript.js"></script>
+
+<script src="/js/verificarLogin.js"></script>

@@ -1,0 +1,222 @@
+:root {
+  --bg-image: url('/img/glassmorphism5.jpg');
+  --backdrop-blur: 10px;
+
+  --glass-border: rgba(255,255,255,0.06);
+  --glass-border-weak: rgba(255,255,255,0.035);
+  --glass-shadow: 0 18px 36px rgba(6,10,20,0.10);
+  --glass-shadow-hover: 0 28px 60px rgba(6,10,20,0.16);
+
+  --text: rgba(255,255,255,0.96);
+  --muted: rgba(255,255,255,0.78);
+  --muted-weak: rgba(255,255,255,0.62);
+
+  --accent: #7b6cff;
+  --accent-strong: #5141c4;
+
+  --radius-lg: 12px;
+  --radius-sm: 8px;
+
+  --card-padding: 4px;     /* reduzido para campos menores */
+  --card-min-height: 10px;  /* reduzido para cards mais compactos */
+  --field-font-size: 0.96rem;
+  --label-font-size: 0.82rem;
+  --sheen-color: rgba(255,255,255,0.16);
+}
+
+/* ---------------- Base / Background ---------------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-image:
+    linear-gradient(rgba(8,10,20,0.45), rgba(8,10,20,0.45)),
+    var(--bg-image);
+  background-size: cover;
+  background-position: center;
+  color: var(--text);
+  font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* container não restringe largura */
+.cola-layout.no-sidebar { width: 100%; padding: 20px; box-sizing: border-box; }
+
+/* header */
+.page-header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom: 12px; }
+.page-header h2 { margin:0; font-size: 1.9rem; font-weight: 800; letter-spacing: -.2px; }
+.page-header p { margin: 4px 0 0 0; color:var(--muted); font-size: .96rem; }
+
+/* ---------------- Grid principal ---------------- */
+.grid-dashboard {
+  display: grid;
+  grid-template-columns: repeat(10, 4fr);
+  gap: 4px;
+  width: calc(100% - 40px);
+  margin: 0 auto 36px;
+  align-items: start;
+}
+
+/* ---------------- Cards (glass) ---------------- */
+.grid-item.card {
+  position: relative; /* necessário para o sheen */
+  overflow: hidden;   /* conter sheen */
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border-weak);
+  box-shadow: var(--glass-shadow);
+  padding: var(--card-padding);
+  min-height: var(--card-min-height);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  transition: transform .28s cubic-bezier(.2,.9,.2,1), box-shadow .28s ease, border-color .22s ease, backdrop-filter .28s ease;
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+  backdrop-filter: blur(var(--backdrop-blur));
+  cursor: default;
+}
+
+/* hover effect: leve elevação, sombra e borda colorida */
+.grid-item.card:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: var(--glass-shadow-hover);
+  border-color: rgba(123,108,255,0.18);
+  -webkit-backdrop-filter: blur(calc(var(--backdrop-blur) + 3px));
+  backdrop-filter: blur(calc(var(--backdrop-blur) + 3px));
+}
+
+/* sheen (reflexo) — pseudo-elemento que varre no hover */
+.grid-item.card::after {
+  content: "";
+  position: absolute;
+  top: -40%;
+  left: -40%;
+  width: 40%;
+  height: 180%;
+  background: linear-gradient(120deg,
+    rgba(255,255,255,0.0) 0%,
+    rgba(255,255,255,0.08) 45%,
+    rgba(255,255,255,0.18) 55%,
+    rgba(255,255,255,0.02) 70%,
+    rgba(255,255,255,0.0) 100%);
+  transform: rotate(25deg) translateX(-140%);
+  transition: transform .8s cubic-bezier(.2,.8,.2,1), opacity .6s ease;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* ao passar o mouse, o sheen varre o cartão */
+.grid-item.card:hover::after {
+  transform: rotate(25deg) translateX(150%);
+  opacity: 1;
+}
+
+/* efeito sutil de brilho interno (overlay) */
+.grid-item.card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.00), rgba(255,255,255,0.02));
+  pointer-events: none;
+}
+
+/* reduzir o tamanho visual dos elementos (foto e inputs) */
+.photo-wrap img {
+  width: 100%;
+  height: auto;
+  max-height: 220px;  /* reduzido */
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 10px 22px rgba(0,0,0,0.12);
+}
+
+/* meta textos menores */
+.photo-meta #displayName { font-weight: 700; font-size: .98rem; color: var(--text); margin-top:6px; }
+.photo-meta .muted { color: var(--muted); font-size: .84rem; }
+
+/* labels e inputs: tamanho reduzido e foco com underline */
+.field-label { font-size: var(--label-font-size, .82rem); color: var(--muted); display:block; margin-bottom:6px; }
+.field-input {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: var(--field-font-size);
+  padding: 6px 6px;            /* reduzido */
+  outline: none;
+  width: 100%;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+
+/* focus acessível — underline de accent */
+.field-input:focus {
+  border-bottom-color: rgba(123,108,255,0.9);
+  box-shadow: 0 6px 20px rgba(81,65,196,0.06);
+}
+
+/* file input estilo */
+.file-input {
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  font-size: .95rem;
+}
+
+/* spans para retângulos maiores */
+.span-2 { grid-column: span 2; }
+.span-3 { grid-column: span 3; }
+
+/* actions row full width e botão */
+.actions-row { display:flex; align-items:center; padding:6px; }
+.actions-row .actions-inner { display:flex; justify-content:space-between; width:100%; gap:12px; align-items:center; }
+.actions .btn-primary {
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  border: none;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .16s ease;
+}
+.actions .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(81,65,196,0.12); }
+
+/* toast */
+.alert-container { min-height: 1.2rem; }
+.toast-alert { display:inline-block; padding: 8px 10px; border-radius: 10px; background: rgba(0,0,0,0.28); color: #fff; font-weight:600; font-size:.95rem; }
+
+/* ---------------- Responsividade ---------------- */
+@media (max-width: 1100px) {
+  .grid-dashboard { grid-template-columns: repeat(2, 1fr); gap: 14px; width: calc(100% - 30px); }
+  .photo-wrap img { max-height: 200px; }
+}
+@media (max-width: 700px) {
+  .grid-dashboard { grid-template-columns: 1fr; width: calc(100% - 24px); }
+  .span-2, .span-3 { grid-column: auto; }
+  .photo-wrap img { max-height: 140px; }
+}
+
+/* ---------------- Accessibility: reduz animações ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  .grid-item.card,
+  .grid-item.card::after,
+  .grid-item.card::before,
+  .actions .btn-primary {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ---------------- Fallback para browsers sem backdrop-filter ---------------- */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .grid-item.card { background: rgba(255,255,255,0.08); }
+  .grid-item.card:hover { transform: none; box-shadow: 0 12px 28px rgba(0,0,0,0.12); border-color: var(--glass-border); }
+}
+
+/* small helper— evita que inputs fiquem muito grandes visualmente */
+.field-input[type="number"] { max-width: 160px; }

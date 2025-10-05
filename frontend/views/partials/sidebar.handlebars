@@ -1,35 +1,31 @@
-<link rel="stylesheet" href="/css/doc.css">
+{{!-- <!-- frontend/views/documentacaoGestor.handlebars -->
+<link rel="stylesheet" href="/css/documentacaoGestor.css">
+
 <aside class="sidebar">
   <h6 class="fw-bold mb-3">Categorias Documentação</h6>
   <ul class="nav flex-column">
-    <!-- destaque ativo na nav lateral -->
     <li class="side-item">
-      <a class="nav-link {{#ifCond categoria '==' 'contratos'}}active{{/ifCond}}" 
-         href="/documentacao?categoria=contratos">
+      <a class="nav-link {{#ifCond categoria '==' 'contratos'}}active{{/ifCond}}" href="/documentacao?categoria=contratos">
         <i class="bi bi-briefcase-fill me-2"></i>Contratos
       </a>
     </li>
     <li class="side-item">
-      <a class="nav-link {{#ifCond categoria '==' 'recibos'}}active{{/ifCond}}" 
-         href="/documentacao?categoria=recibos">
+      <a class="nav-link {{#ifCond categoria '==' 'recibos'}}active{{/ifCond}}" href="/documentacao?categoria=recibos">
         <i class="bi bi-card-text me-2"></i>Recibos
       </a>
     </li>
     <li class="side-item">
-      <a class="nav-link {{#ifCond categoria '==' 'ferias'}}active{{/ifCond}}" 
-         href="/documentacao?categoria=ferias">
+      <a class="nav-link {{#ifCond categoria '==' 'ferias'}}active{{/ifCond}}" href="/documentacao?categoria=ferias">
         <i class="bi bi-calendar me-2"></i>Comprov. de férias
       </a>
     </li>
     <li class="side-item">
-      <a class="nav-link {{#ifCond categoria '==' 'atestados'}}active{{/ifCond}}" 
-         href="/documentacao?categoria=atestados">
+      <a class="nav-link {{#ifCond categoria '==' 'atestados'}}active{{/ifCond}}" href="/documentacao?categoria=atestados">
         <i class="bi bi-hospital me-2"></i>Atestados médicos
       </a>
     </li>
     <li class="side-item">
-      <a class="nav-link {{#ifCond categoria '==' 'outros'}}active{{/ifCond}}" 
-         href="/documentacao?categoria=outros">
+      <a class="nav-link {{#ifCond categoria '==' 'outros'}}active{{/ifCond}}" href="/documentacao?categoria=outros">
         <i class="bi bi-folder-fill me-2"></i>Outros documentos
       </a>
     </li>
@@ -39,14 +35,86 @@
 
   <h6 class="fw-bold mt-3">Ações rápidas</h6>
   <ul class="nav flex-column">
-    <li class="nav-item">
-      <a class="nav-link" href="#"><i class="bi bi-search me-2"></i>Procurar Documentos</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="#"><i class="bi bi-download me-2"></i>Recentes Download</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" href="#"><i class="bi bi-trash me-2"></i>Arquivados</a>
-    </li>
+    <li class="nav-item"><a class="nav-link" href="#" id="btnProcurar"><i class="bi bi-search me-2"></i>Procurar Documentos</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" id="btnRecentes"><i class="bi bi-download me-2"></i>Recentes Download</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" id="btnArquivados"><i class="bi bi-trash me-2"></i>Arquivados</a></li>
   </ul>
 </aside>
+
+<div id="documentosContainer" class="p-3"></div>
+
+<script>
+const API_BASE = '/api';
+
+// Carregar documentos por categoria
+async function carregarDocumentos(categoria = 'outros') {
+  const container = document.getElementById('documentosContainer');
+  container.innerHTML = '⏳ Carregando...';
+
+  try {
+    const res = await fetch(`${API_BASE}/upload/documentos?categoria=${categoria}`, {
+      headers: { 'Accept': 'application/json' },
+      credentials: 'include'
+    });
+
+    if (!res.ok) throw new Error(`Erro ${res.status}`);
+    const data = await res.json();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      container.innerHTML = '<p class="muted">Nenhum documento encontrado.</p>';
+      return;
+    }
+
+    container.innerHTML = '';
+    data.forEach(doc => {
+      const item = document.createElement('div');
+      item.className = 'doc-item glass-item mb-2 p-2';
+      item.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center">
+          <span>${doc.nome || doc.originalname}</span>
+          <a href="${API_BASE}/upload/download/${doc.id}" class="btn btn-sm btn-outline">⬇️ Download</a>
+        </div>
+      `;
+      container.appendChild(item);
+    });
+
+  } catch (err) {
+    console.error(err);
+    container.innerHTML = '<p class="text-danger">Erro ao carregar documentos.</p>';
+  }
+}
+
+// Exemplo de upload
+async function enviarDocumento(file) {
+  if (!file) return alert('Selecione um arquivo.');
+
+  const formData = new FormData();
+  formData.append('documento', file);
+
+  try {
+    const res = await fetch(`${API_BASE}/upload/usuario/upload`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(errText || `Erro ${res.status}`);
+    }
+
+    alert('✅ Upload realizado com sucesso!');
+    carregarDocumentos();
+
+  } catch (err) {
+    console.error(err);
+    alert(`❌ Falha no upload: ${err.message}`);
+  }
+}
+
+// Inicializa com a categoria atual
+document.addEventListener('DOMContentLoaded', () => {
+  const categoria = new URLSearchParams(window.location.search).get('categoria') || 'outros';
+  carregarDocumentos(categoria);
+});
+</script> --}}

@@ -1,52 +1,86 @@
-const db = require('../config/db'); 
+// backend/middlewares/uploadMiddleware.js
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs'); // Módulo para interagir com o sistema de arquivos
+const fs = require('fs');
+const slugify = require('slugify');
 
-// Define o diretório de uploads
-const uploadDir = path.join(__dirname, '..', 'uploads'); // 'backend/uploads'
+// Diretório padrão de uploads
+const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 
-// Verifica se o diretório de uploads existe, se não, cria
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+// Cria a pasta se não existir
+try {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+    console.log('📁 Pasta "uploads" criada:', UPLOAD_DIR);
+  }
+} catch (err) {
+  console.error('❌ Erro ao criar pasta de uploads:', err);
 }
 
-// Configuração de armazenamento do Multer
+// Limite de upload (MB → bytes)
+const MAX_UPLOAD_MB = Number(process.env.MAX_UPLOAD_MB || 15);
+const MAX_FILE_SIZE_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+
+// Tipos permitidos
+const ALLOWED_MIMETYPES = new Set([
+  'image/jpeg','image/jpg','image/png','image/gif',
+  'application/pdf',
+  'application/msword', // .doc
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document', // .docx
+  'text/plain', // .txt
+  'application/vnd.ms-excel', // .xls
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+  'text/csv'
+]);
+const ALLOWED_EXTENSIONS = /\.(jpe?g|png|gif|pdf|docx?|txt|xls[x]?|csv)$/i;
+
+// Storage config
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        // Define o destino onde os arquivos serão salvos
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-  // Usar um ID temporário se req.usuario não estiver disponível ainda
-  const colaboradorId = req.usuario?.id || 'temp_' + Date.now();
-  const timestamp = Date.now();
-  const ext = path.extname(file.originalname);
-  cb(null, `documento-${colaboradorId}-${timestamp}${ext}`);
+  destination: (req, file, cb) => {
+    cb(null, UPLOAD_DIR);
+  },
+  filename: (req, file, cb) => {
+    const userId =
+      (req.usuario && (req.usuario.id || req.usuario.numero_registro || req.usuario.cnpj)) ||
+      'anonimo';
+    const timestamp = Date.now();
+    const ext = path.extname(file.originalname).toLowerCase();
+    const base = path.basename(file.originalname, ext);
+
+    // Slug seguro para evitar caracteres estranhos
+    const safeBase = slugify(base, { lower: true, strict: true }).slice(0, 40);
+
+    const nomeArquivo = `doc-${userId}-${safeBase}-${timestamp}${ext}`;
+    cb(null, nomeArquivo);
+  }
+});
+
+// Filtro de tipo
+function fileFilter(req, file, cb) {
+  const mimetypeOk = ALLOWED_MIMETYPES.has(file.mimetype);
+  const extensionOk = ALLOWED_EXTENSIONS.test(file.originalname || '');
+  if (mimetypeOk && extensionOk) {
+    return cb(null, true);
+  }
+  const err = new multer.MulterError('LIMIT_UNEXPECTED_FILE');
+  err.message =
+    '❌ Tipo de arquivo não suportado. Permitidos: JPG, JPEG, PNG, GIF, PDF, DOC, DOCX, TXT, XLS, XLSX, CSV.';
+  return cb(err, false);
 }
+
+// Middleware final
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: MAX_FILE_SIZE_BYTES
+  }
 });
 
-// Filtro de arquivo para permitir apenas alguns tipos
-const fileFilter = (req, file, cb) => {
-    // Permite apenas imagens e PDFs
-    const allowedTypes = /jpeg|jpg|png|pdf|doc|docx/;
-    const mimetype = allowedTypes.test(file.mimetype);
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+// Exporta limites para o front poder exibir
+upload.MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_BYTES;
+upload.MAX_UPLOAD_MB = MAX_UPLOAD_MB;
 
-    if (mimetype && extname) {
-        return cb(null, true);
-    }
-    cb(new Error('Tipo de arquivo não suportado! Apenas JPG, JPEG, PNG, PDF, DOC, DOCX são permitidos.'));
-};
+console.log(`🔧 uploadMiddleware configurado — limite: ${MAX_UPLOAD_MB} MB (${MAX_FILE_SIZE_BYTES} bytes)`);
 
-// Instância do Multer com as configurações
-// .single('nomeDoCampo') indica que é esperado apenas um arquivo
-const uploadMiddleware = multer({
-    storage: storage,
-    limits: {
-        fileSize: 1024 * 1024 * 5 // Limite de 5MB por arquivo
-    },
-    fileFilter: fileFilter
-});
-
-module.exports = uploadMiddleware;
+module.exports = upload;

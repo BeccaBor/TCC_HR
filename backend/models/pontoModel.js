@@ -37,19 +37,19 @@ const pontoModel = {
   /**
    * Lista registros do colaborador/gestor logado
    */
-  async getByUsuario(usuarioId, cnpj, limit = 20) {
+  async getByUsuarioId(usuarioId, limit = 20) {
     try {
       const [rows] = await db.query(
         `SELECT id, usuario_id, nome, setor, tipo_usuario, tipo_registro, horas, data_registro
          FROM pontos
-         WHERE usuario_id = ? AND cnpj = ?
+         WHERE usuario_id = ?
          ORDER BY data_registro DESC
          LIMIT ?`,
-        [usuarioId, cnpj, Number(limit)]
+        [usuarioId, Number(limit)]
       );
       return rows;
     } catch (err) {
-      console.error('Erro em pontoModel.getByUsuario:', err);
+      console.error('Erro em pontoModel.getByUsuarioId:', err);
       return [];
     }
   },
@@ -57,19 +57,20 @@ const pontoModel = {
   /**
    * Lista registros da empresa (somente gestores)
    */
-  async getByEmpresa(cnpj, limit = 100) {
+  async getByEmpresaId(empresaId, limit = 100) {
     try {
       const [rows] = await db.query(
-        `SELECT id, usuario_id, nome, setor, tipo_usuario, tipo_registro, horas, data_registro
-         FROM pontos
-         WHERE cnpj = ?
-         ORDER BY data_registro DESC
+        `SELECT p.id, p.usuario_id, p.nome, p.setor, p.tipo_usuario, p.tipo_registro, p.horas, p.data_registro
+         FROM pontos p
+         JOIN usuario u ON p.usuario_id = u.id
+         WHERE u.empresa_id = ?
+         ORDER BY p.data_registro DESC
          LIMIT ?`,
-        [cnpj, Number(limit)]
+        [empresaId, Number(limit)]
       );
       return rows;
     } catch (err) {
-      console.error('Erro em pontoModel.getByEmpresa:', err);
+      console.error('Erro em pontoModel.getByEmpresaId:', err);
       return [];
     }
   }

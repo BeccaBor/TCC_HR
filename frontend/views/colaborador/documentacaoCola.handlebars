@@ -1,0 +1,422 @@
+<link rel="stylesheet" href="/css/documentacaoCola.css">
+
+<div class="page-wrapper">
+  {{> navbarCola }}
+  <div class="cola-layout">
+    <main class="content p-4">
+      <!-- Cabeçalho -->
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+          <h4>Documentação</h4>
+          <p class="mb-0">Gerencie seus documentos pessoais de forma simples e segura</p>
+        </div>
+        <div class="text-end">
+          <small class="text-muted">Conectado como</small><br>
+          <strong id="usuarioNome" class="text-primary">Colaborador</strong>
+        </div>
+      </div>
+
+      <!-- GRID principal: upload à esquerda / lista de documentos à direita -->
+      <div class="upload-grid">
+
+        <!-- Área de upload -->
+        <section class="upload-area" id="uploadArea" aria-label="Área de upload">
+          <div class="upload-inner">
+            <i class="bi bi-cloud-arrow-up upload-icon"></i>
+            <h5 class="upload-title">Carregar arquivo ou arraste aqui</h5>
+            <p class="upload-sub">Formatos suportados: JPG, JPEG, PNG, GIF, PDF, DOC, DOCX, TXT, XLS, XLSX</p>
+
+            <form id="uploadForm" enctype="multipart/form-data" class="upload-form" autocomplete="off">
+              <input type="file" id="fileInput" name="documento"
+                     accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.xls,.xlsx" hidden />
+
+              <!-- Botões -->
+              <div class="upload-actions">
+                <button type="button" id="btnSelectFile" class="btn btn-outline-secondary">
+                  <i class="bi bi-file-earmark-arrow-up me-2"></i> Selecionar arquivo
+                </button>
+                <div class="file-meta">
+                  <p id="fileName" style="display:none;"></p>
+                </div>
+              </div>
+
+              <!-- Categoria -->
+              <div class="form-row">
+                <label for="tipoDocumento" class="form-label"></label>
+                <select id="tipoDocumento" name="tipo_documento" class="form-select">
+                    <br>
+                  <option value="">Selecione a categoria</option>
+                  <option value="contrato">📋 Contratos</option>
+                  <option value="recibo">📄 Recibos</option>
+                  <option value="atestado">🏥 Atestados médicos</option>
+                  <option value="holerite">💰 Holerites</option>
+                  <option value="declaracao">📑 Comprov. de férias</option>
+                  <option value="outros">📁 Outros documentos</option>
+                </select>
+              </div>
+
+              <!-- Enviar -->
+              <div class="form-row actions-row">
+                <button type="submit" id="btnEnviar" class="btn btn-primary" disabled>
+                  <i class="bi bi-upload me-2"></i> Enviar Documento
+                </button>
+              </div>
+            </form>
+
+            <!-- Feedback -->
+            <p id="uploadStatus" class="text-success" style="display:none;"></p>
+            <p id="uploadError" class="text-danger" style="display:none;"></p>
+          </div>
+        </section>
+
+        <!-- Lista de uploads -->
+        <aside class="uploads-list">
+          <div id="arquivosList" class="arquivos-list">
+            <div class="empty-placeholder">Nenhum documento enviado ainda.</div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const BACKEND_URL = '{{BACKEND_URL}}'; // injetado pelo servidor
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput = document.getElementById('fileInput');
+  const btnSelectFile = document.getElementById('btnSelectFile');
+  const fileNameDisplay = document.getElementById('fileName');
+  const btnEnviar = document.getElementById('btnEnviar');
+  const tipoDocumentoSelect = document.getElementById('tipoDocumento');
+  const uploadForm = document.getElementById('uploadForm');
+  const uploadStatus = document.getElementById('uploadStatus');
+  const uploadError = document.getElementById('uploadError');
+  const arquivosList = document.getElementById('arquivosList'); // container dos cards
+
+  // cliente: limite visual (mantém coerência com o server)
+  const CLIENT_MAX_FILE_SIZE = (window.MAX_UPLOAD_MB || 15) * 1024 * 1024; // bytes
+
+  let arquivoSelecionado = null;
+  let carregando = false;
+
+  function getToken() {
+    return localStorage.getItem('token') || sessionStorage.getItem('token') || null;
+  }
+
+  function showStatus(msg) {
+    if (!uploadStatus) return;
+    uploadStatus.textContent = msg;
+    uploadStatus.style.display = 'block';
+    uploadError.style.display = 'none';
+  }
+  function showError(msg) {
+    if (!uploadError) return;
+    uploadError.textContent = msg;
+    uploadError.style.display = 'block';
+    uploadStatus.style.display = 'none';
+  }
+  function hideFeedback() {
+    if (uploadStatus) uploadStatus.style.display = 'none';
+    if (uploadError) uploadError.style.display = 'none';
+  }
+
+  // Habilita / desabilita botão submit
+  function validarFormulario() {
+    btnEnviar.disabled = !(arquivoSelecionado && tipoDocumentoSelect.value && !carregando);
+  }
+
+  // Drag & Drop (visuais)
+  if (uploadArea) {
+    ['dragenter','dragover'].forEach(evt => {
+      uploadArea.addEventListener(evt, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        uploadArea.classList.add('dragover');
+      });
+    });
+    ['dragleave','dragend','drop'].forEach(evt => {
+      uploadArea.addEventListener(evt, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        uploadArea.classList.remove('dragover');
+      });
+    });
+    uploadArea.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (!dt || !dt.files || dt.files.length === 0) return;
+      fileInput.files = dt.files; // popula input file
+      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  }
+
+  // Botão selecionar dispara input
+  btnSelectFile?.addEventListener('click', () => fileInput?.click());
+
+  // Ao escolher arquivo (via seletor ou drop)
+  fileInput?.addEventListener('change', (e) => {
+    hideFeedback();
+    const f = e.target.files && e.target.files[0];
+    if (!f) {
+      arquivoSelecionado = null;
+      fileNameDisplay.style.display = 'none';
+      validarFormulario();
+      return;
+    }
+
+    // validação de tamanho no cliente
+    if (f.size > CLIENT_MAX_FILE_SIZE) {
+      arquivoSelecionado = null;
+      fileNameDisplay.style.display = 'block';
+      fileNameDisplay.style.color = '#ff6b6b';
+      fileNameDisplay.textContent = `Arquivo muito grande: ${(f.size/1024/1024).toFixed(2)} MB — máximo ${(CLIENT_MAX_FILE_SIZE/1024/1024)} MB.`;
+      btnEnviar.disabled = true;
+      return;
+    }
+
+    arquivoSelecionado = f;
+    fileNameDisplay.style.display = 'block';
+    fileNameDisplay.style.color = '#bfe6ff';
+    fileNameDisplay.textContent = `${f.name} — ${(f.size/1024/1024).toFixed(2)} MB`;
+    validarFormulario();
+  });
+
+  // Revalida quando muda a categoria
+  tipoDocumentoSelect?.addEventListener('change', validarFormulario);
+
+  // Visualizar documento: faz fetch com Authorization e abre blob em nova aba
+  async function visualizarDocumento(id) {
+    const token = getToken();
+    if (!token) { showError('Sessão inválida. Faça login.'); setTimeout(() => window.location.href = '/', 1200); return; }
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/upload/download/${encodeURIComponent(id)}`, {
+        method: 'GET',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      if (!res.ok) {
+        // tenta ler JSON com mensagem
+        let msg = `Erro HTTP ${res.status}`;
+        try {
+          const j = await res.json();
+          msg = j.erro || j.message || msg;
+        } catch(_) {
+          // corpo não JSON
+        }
+        showError('Erro ao abrir documento: ' + msg);
+        return;
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      // revogar depois
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      console.error('erro visualizarDocumento', err);
+      showError('Erro ao abrir documento.');
+    }
+  }
+
+  // Renderiza array de uploads no container arquivosList
+  function renderizarUploads(uploads) {
+    if (!arquivosList) return;
+    arquivosList.innerHTML = '';
+
+    if (!uploads || uploads.length === 0) {
+      arquivosList.innerHTML = `<div class="empty-placeholder">Nenhum documento carregado ainda.</div>`;
+      return;
+    }
+
+    const icones = {
+      contrato: '📋',
+      recibo: '📄',
+      atestado: '🏥',
+      holerite: '💰',
+      declaracao: '📑',
+      outros: '📁'
+    };
+
+    // criar cards
+    uploads.forEach(u => {
+      // campos esperados: id, tipo_documento, nome_arquivo, data_upload, caminho_arquivo
+      const id = u.id || u._id || u.upload_id || u.ID;
+      const tipo = u.tipo_documento || u.tipo || 'outros';
+      const nome = u.nome_arquivo || u.nome || u.fileName || 'Sem nome';
+      const data_enviada = u.data_upload || u.created_at || u.data || null;
+
+      const card = document.createElement('div');
+      card.className = 'doc-card';
+
+      card.innerHTML = `
+        <div class="doc-icon">${icones[tipo] || '📁'}</div>
+        <div class="doc-info">
+          <div class="doc-title">${escapeHtml(nome)}</div>
+          <div class="doc-meta">
+            <span>${data_enviada ? new Date(data_enviada).toLocaleDateString('pt-BR') : ''}</span>
+            <span class="doc-actions">
+              <button type="button" class="btn-visualizar btn btn-sm btn-outline-primary" data-id="${escapeHtml(id)}">
+                <i class="bi bi-eye"></i> Visualizar
+              </button>
+            </span>
+          </div>
+        </div>
+      `;
+
+      arquivosList.appendChild(card);
+    });
+
+    // Delegação: listeners nos botões visualizar
+    arquivosList.querySelectorAll('.btn-visualizar').forEach(btn => {
+      btn.addEventListener('click', (ev) => {
+        const id = ev.currentTarget.getAttribute('data-id');
+        if (id) visualizarDocumento(id);
+      });
+    });
+  }
+
+  // Escapa texto para evitar XSS simples
+  function escapeHtml(str = '') {
+    return String(str).replace(/[&<>"'`=\/]/g, s => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;'
+    }[s]));
+  }
+
+  // Carrega uploads do colaborador e renderiza
+  async function carregarMeusUploads() {
+    const token = getToken();
+    if (!token) {
+      renderizarUploads([]);
+      return;
+    }
+    try {
+      // opcional: mostrar loading
+      if (arquivosList) arquivosList.innerHTML = `<div class="empty-placeholder">Carregando documentos...</div>`;
+
+      const res = await fetch(`${BACKEND_URL}/api/upload/colaborador/uploads`, {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+
+      if (!res.ok) {
+        // tratar 401 -> logout/redirect
+        if (res.status === 401 || res.status === 403) {
+          showError('Sessão expirada. Redirecionando para login...');
+          localStorage.removeItem('token'); sessionStorage.removeItem('token');
+          setTimeout(() => window.location.href='/', 1400);
+          return;
+        }
+        // outros: tenta ler JSON
+        let msg = `Erro HTTP ${res.status}`;
+        try { const j = await res.json(); msg = j.erro || j.message || msg; } catch(_) {}
+        showError('Erro ao carregar documentos: ' + msg);
+        return;
+      }
+
+      const data = await res.json();
+      // espera data.uploads (conforme controller)
+      const uploads = data.uploads || data.documentos || data.items || [];
+      renderizarUploads(uploads);
+      hideFeedback();
+    } catch (err) {
+      console.error('erro carregarMeusUploads', err);
+      showError('Erro ao carregar documentos.');
+    }
+  }
+
+  // Envio do formulário (upload)
+  uploadForm?.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    hideFeedback();
+
+    if (!arquivoSelecionado) { showError('Selecione um arquivo antes de enviar.'); return; }
+    if (!tipoDocumentoSelect.value) { showError('Escolha a categoria do documento.'); return; }
+
+    const token = getToken();
+    if (!token) { showError('Token não encontrado. Faça login.'); setTimeout(() => window.location.href='/', 1200); return; }
+
+    const formData = new FormData();
+    formData.append('documento', arquivoSelecionado);
+    formData.append('tipo_documento', tipoDocumentoSelect.value); // nome esperado pelo server
+
+    carregando = true;
+    validarFormulario();
+    showStatus('Enviando arquivo...');
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/upload/colaborador/upload`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token }, // NÃO setar Content-Type quando usa FormData
+        body: formData
+      });
+
+      // tratar respostas
+      if (!res.ok) {
+        // tenta pegar mensagem JSON
+        let errMsg = `Erro HTTP ${res.status}`;
+        try {
+          const j = await res.json();
+          errMsg = j.erro || j.message || errMsg;
+        } catch (e) {
+          // corpo não JSON
+          const text = await res.text();
+          if (text) errMsg = text;
+        }
+
+        if (res.status === 413) {
+          showError('Arquivo muito grande (server). Tente um arquivo menor.');
+        } else if (res.status === 401 || res.status === 403) {
+          showError('Sessão inválida. Faça login novamente.');
+          localStorage.removeItem('token'); sessionStorage.removeItem('token');
+          setTimeout(()=> window.location.href='/', 1200);
+        } else {
+          showError('Erro ao enviar arquivo: ' + errMsg);
+        }
+        return;
+      }
+
+      // sucesso
+      const json = await res.json();
+      showStatus(json.mensagem || 'Upload realizado com sucesso!');
+      // limpar seleção
+      arquivoSelecionado = null;
+      fileInput.value = '';
+      fileNameDisplay.style.display = 'none';
+      tipoDocumentoSelect.value = '';
+      validarFormulario();
+
+      // recarregar lista para refletir novo upload
+      await carregarMeusUploads();
+    } catch (err) {
+      console.error('Erro no fetch de upload:', err);
+      showError('Erro ao enviar o documento. Tente novamente.');
+    } finally {
+      carregando = false;
+      validarFormulario();
+    }
+  });
+
+  // inicialização
+  (async function init() {
+    // tenta obter nome do usuário e validar token (silencioso)
+    const token = getToken();
+    if (!token) {
+      // não faz redirect imediato — permite que a view mostre algo, ou redirecione quando a ação exigir
+      console.warn('token não encontrado no storage');
+    } else {
+      // tenta preencher nome do usuário (opcional)
+      try {
+        const r = await fetch(`${BACKEND_URL}/api/auth/me`, { headers: { 'Authorization': 'Bearer ' + token } });
+        if (r.ok) {
+          const j = await r.json();
+          const nome = j.usuario?.nome || j.nome;
+          const usuarioNomeEl = document.getElementById('usuarioNome');
+          if (usuarioNomeEl && nome) usuarioNomeEl.textContent = nome;
+        }
+      } catch (e) { /* ignore */ }
+    }
+    // carrega os uploads existentes
+    carregarMeusUploads();
+    validarFormulario();
+  })();
+
+});
+</script>

@@ -1,119 +1,178 @@
 .containerHome {
     margin: 0;
     padding: 0;
-   background: 
-      linear-gradient(to bottom, rgba(10,10,10,0.5), rgba(0,0,0,10)),
-        url("/img/fundofoda.png") no-repeat center top;
+    background: linear-gradient(to bottom, rgba(10,10,10,0.5), rgba(0,0,0,0.1)),
+                url("/img/fundofoda.png") no-repeat center top;
     background-attachment: fixed;
     background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     height: 100vh;
 }
 
-
+/* overlay escuro com blur */
 /* overlay escuro com blur */
 #overlay {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(12px);
-  z-index: 1050;
-  justify-content: center;
-  align-items: center;
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 1050;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem; /* garante que haja espaço em telas pequenas */
 }
 
-/* caixinha estilo vidro */
+/* pop-up estilo vidro responsivo */
 #popup {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2.5rem;
-  padding: 3rem 2.5rem;
-  width: 100%;
-  max-width: 450px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6),
-              inset 0 0 30px rgba(255, 255, 255, 0.05);
-  text-align: center;
-  animation: popupFade 0.35s ease;
-  position: relative;
-  backdrop-filter: blur(25px);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-}
-
-/* titulo */
-#popup h3 {
-  font-size: 1.6rem;
-  margin-bottom: 1.8rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-/* inputs estilo vidro */
-#popup input {
-  width: 100%;
-  padding: 14px;
-  margin-bottom: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 10px;
-  font-size: 1rem;
-  outline: none;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  backdrop-filter: blur(6px);
-  transition: border 0.2s, background 0.2s;
-}
-
-#popup input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-#popup input:focus {
-  border-color: #8ab4f8;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-/* botão principal estilo pill */
-#popup button[type="submit"] {
-  width: 40%;
-  background: rgba(255, 255, 255, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: #fff;
-  font-weight: 600;
-  padding: 10px;
-  border-radius: 50px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 0.5rem;
-}
-
-#popup button[type="submit"]:hover {
-  background: rgba(255, 255, 255, 0.4);
-  transform: translateY(-2px);
-}
-
-/* botão de fechar (X) */
-.close-btn {
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  font-size: 1.6rem;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.close-btn:hover {
-  color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2rem;
+    padding: 2rem;
+    width: 100%;
+    max-width: 450px; /* largura máxima em telas grandes */
+    min-width: 280px; /* largura mínima para telas pequenas */
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6),
+                inset 0 0 30px rgba(255, 255, 255, 0.05);
+    text-align: center;
+    animation: popupFade 0.35s ease;
+    position: relative;
+    backdrop-filter: blur(20px);
+    border: 1.5px solid rgba(255, 255, 255, 0.25);
+    color: #fff;
+    max-height: 90vh; /* não ultrapassa altura da tela */
+    overflow-y: auto; /* scroll interno se o conteúdo for maior que a tela */
 }
 
 /* animação */
 @keyframes popupFade {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* titulo */
+#popup h3 {
+    font-size: 1.6rem;
+    margin-bottom: 1.8rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* inputs */
+#popup input, #popup select {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    font-size: 1rem;
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    transition: border 0.2s, background 0.2s;
+}
+
+#popup input::placeholder, #popup select {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+#popup input:focus, #popup select:focus {
+    border-color: #8ab4f8;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* botões */
+#popup button[type="submit"] {
+    width: 40%;
+    background: rgba(255, 255, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #fff;
+    font-weight: 600;
+    padding: 10px;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+}
+
+#popup button[type="submit"]:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+/* fechar (X) */
+.close-btn {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+    font-size: 1.6rem;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.close-btn:hover {
+    color: #fff;
+}
+
+/* animação */
+@keyframes popupFade {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+#popup select {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    font-size: 1rem;
+    outline: none;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+    backdrop-filter: blur(6px);
+    transition: border 0.2s, background 0.2s;
+    appearance: none; /* remove estilo padrão do navegador */
+}
+
+/* placeholder das opções */
+#popup select option {
+    color: #000; /* cor das opções visíveis no menu dropdown */
+    background: #fff; /* fundo branco para legibilidade */
+}
+/* Scrollbar para navegadores Chromium (Chrome, Edge, Opera) */
+#popup::-webkit-scrollbar {
+    width: 8px; /* largura da barra */
+}
+
+#popup::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05); /* fundo do track */
+    border-radius: 4px;
+}
+
+#popup::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2); /* cor do thumb */
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+#popup::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35); /* hover mais claro */
+}
+
+/* Scrollbar para Firefox */
+#popup {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
 }

@@ -1,63 +1,166 @@
 <link rel="stylesheet" href="/css/navbar.css">
-<nav class="navbar d-flex justify-content-between align-items-center p-3">
-     <img src="/img/Conecthar.png" alt="" height="20" width="113" style="margin-left: 27px;">
-  <div class="d-flex gap-5">
-    <a href="/gestor/documentacao" class="btnNav btn ">Documentação</a>
-    <a href="/gestor/folhadepagamento" class="btnNav btn">Folha de pagamento</a>
-    <a href="/gestor/beneficios" class="btnNav btn">Gerenciar Benefícios</a>
-    <a href="/gestor/solicitacoes" class="btnNav btn">Solicitações</a>
-    <a href="/gestor/gerenciamento" class="btnNav btn">Gerenciamento</a>
-    <a href="/gestor/gerenciarPonto" class="btnNav btn">Gerenciar ponto</a>
+
+<nav class="navbar-gestor d-flex justify-content-between align-items-center" role="navigation" aria-label="Navbar Gestor">
+  <!-- Brand -->
+  <div class="brand-left d-flex align-items-center">
+    <a href="/" class="d-flex align-items-center" aria-label="Ir para home">
+      <img src="/img/Conecthar.png" alt="Conecthar" height="40" width="180">
+    </a>
   </div>
-<!-- Ícone com dropdown -->
-<div class="dropdown">
-  <a class="btn dropdown-toggle p-0 border-0 bg-transparent" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    <i class="bi bi-person-circle fs-3"></i>
-  </a>
 
-  <ul class="dropdown-menu dropdown-menu-end">
-    <li><a class="dropdown-item" href="/perfil">Perfil</a></li>
-    <li><a class="dropdown-item" href="#" onclick="abrirModal()">Sair</a></li>
-  </ul>
-</div>
+  <!-- Links centrais -->
+  <div class="d-flex gap-4 nav-links" role="menubar" aria-label="Links principais">
+    <a href="/gestor/documentacao" class="btnNav btn" role="menuitem">Documentação</a>
+    <a href="/gestor/folhadepagamento" class="btnNav btn" role="menuitem">Folha de pagamento</a>
+    <a href="/gestor/beneficios" class="btnNav btn" role="menuitem">Gerenciar Benefícios</a>
+    <a href="/gestor/solicitacoes" class="btnNav btn" role="menuitem">Solicitações</a>
+    <a href="/gestor/gerenciamento" class="btnNav btn" role="menuitem">Gerenciamento</a>
+    <a href="/gestor/gerenciarPonto" class="btnNav btn" role="menuitem">Gerenciar ponto</a>
+  </div>
 
-<!-- Modal custom -->
-<div class="modal-container" id="logoutModal">
-  <div class="modal-content">
-    <span class="close-btn" onclick="fecharModal()">&times;</span>
-    <h2>Confirmar saída</h2>
-    <p>Tem certeza que deseja sair da sua conta?</p>
-    <div class="modal-actions">
-      <button class="cancel-btn" onclick="fecharModal()">Cancelar</button>
-      <a href="/logout" class="logout-btn">Sair</a>
+  <!-- Ações (direita) -->
+  <div class="d-flex align-items-center gap-3 nav-actions">
+    <!-- Botão de perfil: abre popover -->
+    <button id="profileToggle"
+            class="btn-profile"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="profile-popover"
+            aria-label="Abrir opções de perfil"
+            title="Perfil"
+            data-username="{{usuario.nome}}"
+            data-initialized="0">
+      {{#if usuario.foto}}
+        <img src="/uploads/{{usuario.foto}}" alt="Avatar de {{usuario.nome}}" class="avatar-sm">
+      {{else}}
+        <div class="avatar-initials" aria-hidden="true">U</div>
+      {{/if}}
+    </button>
+
+    <!-- (opcional) menu extra -->
+    <button id="btnMenu" class="btn btn-link p-0" type="button" aria-label="Mais opções">
+      <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+    </button>
+  </div>
+</nav>
+
+<div class="linha" aria-hidden="true"></div>
+
+<!-- Modal de confirmação de logout -->
+<div class="modal fade" id="confirmLogoutModal" tabindex="-1" aria-labelledby="confirmLogoutTitle" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="confirmLogoutTitle">Confirmar saída</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p>Tem certeza que deseja sair da sua conta?</p>
+        <div class="d-flex gap-2 justify-content-between mt-3">
+          <button class="btn btn-secondary flex-fill" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger flex-fill" id="confirmLogoutBtn">Sair</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
+
 <script>
-  document.addEventListener("DOMContentLoaded", function() {
-  const modal = document.getElementById("logoutModal");
+/*
+ Navbar Gestor — igual ao Colaborador mas com links do gestor
+*/
+(function () {
+  document.addEventListener('DOMContentLoaded', () => {
+    const BACKEND_URL = (typeof window !== 'undefined' && window.BACKEND_URL) ? window.BACKEND_URL : 'http://localhost:3001';
+    const profileToggle = document.getElementById('profileToggle');
+    const confirmLogoutModalEl = document.getElementById('confirmLogoutModal');
 
-  window.abrirModal = function() {
-    modal.style.display = "flex";
-  }
+    if (!profileToggle) return;
+    if (profileToggle.dataset.initialized === '1') return;
+    profileToggle.dataset.initialized = '1';
 
-  window.fecharModal = function() {
-    modal.style.display = "none";
-  }
+    // Define iniciais se não houver foto
+    try {
+      const initialsEl = profileToggle.querySelector('.avatar-initials');
+      if (initialsEl) {
+        const username = profileToggle.getAttribute('data-username') || '';
+        initialsEl.textContent = username.trim().charAt(0).toUpperCase() || 'U';
+      }
+    } catch(e){}
 
-  window.onclick = function(event) {
-    if (event.target === modal) {
-      modal.style.display = "none";
+    let popoverInstance = null;
+
+    function escapeHtml(str=''){ return str.replace(/[&<>"'`=\/]/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;'}[s])); }
+
+    function buildPopoverHtml(user = {}) {
+      const nome = user.nome ? escapeHtml(user.nome) : 'Usuário';
+      const tipo = user.tipo_usuario ? escapeHtml(user.tipo_usuario) : '';
+      const foto = user.foto ? escapeHtml(user.foto) : null;
+      return `
+        <div id="profile-popover" class="popover-profile" style="min-width:220px;">
+          <div class="d-flex" style="gap:.6rem;padding:10px 12px;align-items:center;">
+            <div style="width:44px;height:44px;border-radius:8px;overflow:hidden;display:grid;place-items:center;background:rgba(255,255,255,0.05);font-weight:700;">
+              ${foto ? `<img src="/uploads/${foto}" style="width:100%;height:100%;object-fit:cover;" alt="Avatar">` : nome.charAt(0)}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:.95rem;">${nome}</div>
+              <div style="font-size:.78rem;color:rgba(0,0,0,0.55)">${tipo}</div>
+            </div>
+          </div>
+          <div style="padding:8px 10px;display:flex;flex-direction:column;gap:8px;">
+            <button id="popoverViewProfile" class="btn btn-sm btn-outline-secondary" type="button">Ver perfil</button>
+            <button id="popoverLogoutBtn" class="btn btn-sm btn-danger" type="button">Sair</button>
+          </div>
+        </div>
+      `;
     }
-  }
-});
 
-function abrirModal() {
-  const modal = document.getElementById("logoutModal");
-  modal.style.display = "flex"; // só abre quando clicar
-}
+    async function toggleProfilePopover(e) {
+      if (popoverInstance) { popoverInstance.dispose(); popoverInstance=null; return; }
+      const token = localStorage.getItem('token');
+      if (!token) return window.location.href='/';
 
+      let usuario={};
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/me`, { headers:{Authorization:`Bearer ${token}`}});
+        if (res.ok) usuario = (await res.json()).usuario || {};
+      } catch(e){}
+
+      const useBootstrap = window.bootstrap?.Popover;
+      if (useBootstrap) {
+        popoverInstance = new bootstrap.Popover(profileToggle, {
+          content: buildPopoverHtml(usuario),
+          html: true, sanitize: false, trigger: 'manual',
+          placement: 'bottom', container: 'body'
+        });
+        popoverInstance.show();
+      }
+      requestAnimationFrame(()=>{
+        const pop = document.querySelector('.popover-profile');
+        if (!pop) return;
+        pop.querySelector('#popoverViewProfile')?.addEventListener('click', ()=>{ 
+          window.location.href = '/gestor/perfil'; 
+        });
+        pop.querySelector('#popoverLogoutBtn')?.addEventListener('click', ()=>{ 
+          const inst = new bootstrap.Modal(confirmLogoutModalEl); inst.show(); 
+        });
+      });
+    }
+
+    async function performLogout() {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(`${BACKEND_URL}/api/auth/logout`, { method:'POST', headers: token?{Authorization:`Bearer ${token}`}:{}} );
+      } catch(e){} 
+      finally {
+        localStorage.removeItem('token');
+        window.location.href='/';
+      }
+    }
+
+    profileToggle.addEventListener('click', toggleProfilePopover);
+    document.getElementById('confirmLogoutBtn')?.addEventListener('click', performLogout);
+  });
+})();
 </script>
-</nav>
-<div class="linha"></div>
-<br>

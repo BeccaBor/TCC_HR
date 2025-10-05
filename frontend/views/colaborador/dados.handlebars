@@ -1,51 +1,224 @@
 {{> navbarCola }}
-{{> sidebarCola }}
 
-{{#*inline "styles"}}
-<link rel="stylesheet" href="/css/colaborador.css">
-{{/inline}}
+<link rel="stylesheet" href="/css/dadosColaborador.css">
 
-<div class="container-fluid">
-  <div class="row">
-    <main class="col-md-10 p-4">
-  <h2>Visualizar Dados</h2>
-<p>Visualize seus dados pessoais e contratos ativos</p>
+<div class="cola-layout no-sidebar">
+  <main class="content" role="main" aria-label="Meus dados">
+    <header class="page-header">
+      <div>
+        <h2>Meus dados</h2>
+        <p>Aqui você pode ver e editar seus dados pessoais</p>
+      </div>
+      <div class="header-actions">
+        <div id="dadosAlertContainer" class="alert-container" aria-live="polite"></div>
+      </div>
+    </header>
 
-<div class="cards">
-  <div class="card">Dados Pessoais <strong>0</strong></div>
-  <div class="card">Contratos Ativos <strong>0</strong></div>
-  <div class="card">Última Atualização <strong>DD/MM/AAAA</strong></div>
+    <!-- GRID PRINCIPAL: 3 colunas, todos os blocos são células da grid (sem coluna fixa) -->
+    <form id="formDadosColaborador" class="grid-dashboard" enctype="multipart/form-data" novalidate>
+      <!-- Card: foto (agora é uma célula igual às outras) -->
+      <div class="grid-item card photo-card" data-label="Foto">
+        <div class="photo-wrap">
+          {{#if usuario.foto}}
+            <img id="previewFoto" src="/uploads/{{usuario.foto}}" alt="Foto de {{usuario.nome}}">
+          {{else}}
+            <img id="previewFoto" src="/img/fundofoda.png" alt="Sem foto">
+          {{/if}}
+        </div>
+        <div class="photo-meta">
+          <div id="displayName">{{usuario.nome}}</div>
+          <div class="muted">{{usuario.cargo}} • {{usuario.setor}}</div>
+          <div class="muted">Registro: {{usuario.numero_registro}}</div>
+        </div>
+        <br>
+      </div>
+  
+      <!-- Card: Nome (larga) -->
+      <div class="grid-item card span-2" data-label="Nome">
+        <label class="field-label">Nome completo</label>
+        <input id="inputNome" class="field-input" type="text" name="nome" value="{{usuario.nome}}" required>
+      </div>
+
+      <!-- Card: CPF -->
+      <div class="grid-item card" data-label="CPF">
+        <label class="field-label">CPF</label>
+        <input id="inputCpf" class="field-input" type="text" name="cpf" value="{{usuario.cpf}}">
+      </div>
+
+      <!-- Card: Email (larga, ocupa 3 colunas) -->
+      <div class="grid-item card span-3" data-label="Email">
+        <label class="field-label">Email</label>
+        <input id="inputEmail" class="field-input" type="email" name="email" value="{{usuario.email}}">
+      </div>
+
+      <!-- Telefone -->
+      <div class="grid-item card" data-label="Telefone">
+        <label class="field-label">Telefone</label>
+        <input id="inputTelefone" class="field-input" type="text" name="telefone" value="{{usuario.telefone}}">
+      </div>
+
+      <!-- Setor -->
+      <div class="grid-item card" data-label="Setor">
+        <label class="field-label">Setor</label>
+        <input id="inputSetor" class="field-input" type="text" name="setor" value="{{usuario.setor}}">
+      </div>
+
+      <!-- Cargo (span-2) -->
+      <div class="grid-item card span-2" data-label="Cargo">
+        <label class="field-label">Cargo</label>
+        <input id="inputCargo" class="field-input" type="text" name="cargo" value="{{usuario.cargo}}">
+      </div>
+
+      <!-- Jornada -->
+      <div class="grid-item card" data-label="Jornada">
+        <label class="field-label">Jornada</label>
+        <input id="inputJornada" class="field-input" type="text" name="tipo_jornada" value="{{usuario.tipo_jornada}}">
+      </div>
+
+      <!-- Horas diárias -->
+      <div class="grid-item card" data-label="Horas">
+        <label class="field-label">Horas diárias</label>
+        <input id="inputHoras" class="field-input" type="number" min="1" max="24" name="horas_diarias" value="{{usuario.horas_diarias}}">
+      </div>
+
+      <!-- Upload de foto (pequeno) -->
+      <div class="grid-item card" data-label="Foto Upload">
+        <label class="field-label">Foto (opcional)</label>
+        <input id="inputFoto" class="field-input file-input" type="file" name="foto" accept="image/*">
+      </div>
+
+      <!-- Campo extra largo (span-3) para observações/endereço -->
+      <div class="grid-item card span-3" data-label="Observação">
+        <label class="field-label">Observações / Endereço</label>
+        <input id="inputObs" class="field-input" name="observacao" type="text" value="{{usuario.observacao}}">
+      </div>
+
+      <!-- BOTÕES (full width) -->
+      <div class="grid-item actions-row span-3" role="group" aria-label="Ações">
+        <div class="actions-inner">
+          <div class="obs">Edite seus dados e clique em Salvar</div>
+          <div class="actions">
+            <button id="btnSalvarDados" type="submit" class="btn btn-primary">Salvar</button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </main>
 </div>
 
-<section class="dados-pessoais">
-  <h3>Dados Pessoais</h3>
-  <form>
-    <label>Nome Completo <input type="text" value="Lorem ipsum sit amet"></label>
-    <label>CPF <input type="text" value="000.000.000-00"></label>
-    <label>Email <input type="email" value="lorem@email.com"></label>
-    <label>Telefone <input type="text" value="(00) 00000-0000"></label>
-    <label>Endereço <input type="text" value="Lorem ipsum dolor sit amet"></label>
-  </form>
-</section>
+<script>
+/* Script mantido — preview + sincronização + submit */
+(function () {
+  const BACKEND_CFG = (typeof window !== 'undefined' && window.BACKEND_URL) ? String(window.BACKEND_URL) : 'http://localhost:3001';
+  const API_ORIGIN = BACKEND_CFG.replace(/\/api$/, '');
+  const AUTH_ME = API_ORIGIN + '/api/auth/me';
+  const UPDATE_ENDPOINT = API_ORIGIN + '/colaborador/atualizar';
 
-<section class="contratos">
-  <h3>Contratos</h3>
-  <table>
-    <thead>
-      <tr><th>Contrato</th><th>Tipo</th><th>Data Início</th><th>Status</th><th>Ações</th></tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>LL-0000-000</td>
-        <td>Mensal</td>
-        <td>DD/MM/AAAA</td>
-        <td><span class="ativo">Ativo</span></td>
-        <td>👁️ ⬇️</td>
-      </tr>
-    </tbody>
-  </table>
-</section>
+  const form = document.getElementById('formDadosColaborador');
+  const alertContainer = document.getElementById('dadosAlertContainer');
+  const btnSalvar = document.getElementById('btnSalvarDados');
+  const previewFoto = document.getElementById('previewFoto');
+  const displayName = document.getElementById('displayName');
 
-    </main>
-  </div>
-</div>
+  function showAlert(message, type = 'info') {
+    if (!alertContainer) return;
+    const el = document.createElement('div');
+    el.className = 'toast-alert ' + type;
+    el.textContent = message;
+    alertContainer.innerHTML = '';
+    alertContainer.appendChild(el);
+    setTimeout(() => { if (alertContainer.contains(el)) alertContainer.removeChild(el); }, 4500);
+  }
+
+  // preview foto on select
+  const fotoInput = document.getElementById('inputFoto');
+  fotoInput?.addEventListener('change', (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    previewFoto.src = URL.createObjectURL(file);
+  });
+
+  async function refreshUsuarioFromApi() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    try {
+      const res = await fetch(AUTH_ME, { headers: { Authorization: 'Bearer ' + token } });
+      if (!res.ok) { localStorage.removeItem('token'); return; }
+      const j = await res.json();
+      const usuario = j.usuario || j.data || {};
+      // populate inputs
+      document.getElementById('inputNome').value = usuario.nome || '';
+      document.getElementById('inputCpf').value = usuario.cpf || '';
+      document.getElementById('inputEmail').value = usuario.email || '';
+      document.getElementById('inputTelefone').value = usuario.telefone || '';
+      document.getElementById('inputSetor').value = usuario.setor || '';
+      document.getElementById('inputCargo').value = usuario.cargo || '';
+      document.getElementById('inputJornada').value = usuario.tipo_jornada || '';
+      document.getElementById('inputHoras').value = usuario.horas_diarias || '';
+      if (usuario.foto) previewFoto.src = '/uploads/' + usuario.foto;
+      if (displayName && usuario.nome) displayName.textContent = usuario.nome;
+    } catch (err) {
+      console.warn('Falha ao atualizar dados do usuário:', err);
+    }
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!btnSalvar) return;
+    btnSalvar.disabled = true;
+    btnSalvar.textContent = 'Salvando...';
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      showAlert('Usuário não autenticado.', 'danger');
+      btnSalvar.disabled = false;
+      btnSalvar.textContent = 'Salvar';
+      return window.location.href = '/';
+    }
+
+    try {
+      const fd = new FormData();
+      fd.append('nome', document.getElementById('inputNome').value || '');
+      fd.append('cpf', document.getElementById('inputCpf').value || '');
+      fd.append('email', document.getElementById('inputEmail').value || '');
+      fd.append('telefone', document.getElementById('inputTelefone').value || '');
+      fd.append('setor', document.getElementById('inputSetor').value || '');
+      fd.append('cargo', document.getElementById('inputCargo').value || '');
+      fd.append('tipo_jornada', document.getElementById('inputJornada').value || '');
+      fd.append('horas_diarias', document.getElementById('inputHoras').value || '');
+      fd.append('observacao', document.getElementById('inputObs')?.value || '');
+
+      const fotoEl = document.getElementById('inputFoto');
+      if (fotoEl && fotoEl.files && fotoEl.files[0]) fd.append('foto', fotoEl.files[0]);
+
+      const res = await fetch(UPDATE_ENDPOINT, {
+        method: 'PUT',
+        headers: { Authorization: 'Bearer ' + token },
+        body: fd,
+        credentials: 'include'
+      });
+
+      const texto = await res.text();
+      let data;
+      try { data = JSON.parse(texto); } catch(e) { data = { success: res.ok, message: texto }; }
+
+      if (res.ok) {
+        showAlert('Dados atualizados com sucesso!', 'success');
+        const novoNome = document.getElementById('inputNome').value || '';
+        if (displayName && novoNome) displayName.textContent = novoNome;
+        setTimeout(() => refreshUsuarioFromApi(), 700);
+      } else {
+        showAlert(data.message || 'Falha ao atualizar dados.', 'danger');
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar dados:', err);
+      showAlert('Erro de conexão com o servidor.', 'danger');
+    } finally {
+      btnSalvar.disabled = false;
+      btnSalvar.textContent = 'Salvar';
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => { refreshUsuarioFromApi(); });
+})();
+</script>

@@ -1,36 +1,57 @@
 {{> navbarCola }}
-{{> sidebarCola }}
-{{#*inline "styles"}}
-<link rel="stylesheet" href="/css/colaborador.css">
-{{/inline}}
-<h2>Holerites e Documentos</h2>
-<p>Visualize e baixe seus holerites, comprovantes e documentos</p>
 
-<div class="filtros">
-  <select>
-    <option>Todos os tipos</option>
-  </select>
-  <select>
-    <option>Últimos 12 meses</option>
-  </select>
-  <input type="text" placeholder="Buscar documentos...">
-  <button>⬇️ Baixar todos</button>
+<link rel="stylesheet" href="/css/holerites.css">
+
+
+<div class="cola-layout has-navbar">
+  <main class="content">
+    <h2>Holerites e Documentos</h2>
+    <p>Visualize e baixe seus holerites, comprovantes e documentos</p>
+
+    <div class="filtros">
+      <select id="tipoFiltro">
+        <option value="">Todos os tipos</option>
+        {{#each tipos}}
+          <option value="{{this}}">{{this}}</option>
+        {{/each}}
+      </select>
+
+      <select id="periodoFiltro">
+        <option value="">Últimos 12 meses</option>
+      </select>
+
+      <input id="buscaDocs" type="text" placeholder="Buscar documentos..." />
+      <button id="baixarTodosBtn" class="btn btn-outline-primary">⬇️ Baixar todos</button>
+    </div>
+
+    <div class="holerites-grid">
+      {{#if holerites.length}}
+        {{#each holerites}}
+          <div class="holerite-card">
+            <h4>{{this.titulo}}</h4>
+            <p>{{this.descricao}}</p>
+            <p>Data: {{this.data}}</p>
+            <p>Tamanho: {{this.tamanho}}</p>
+            <div class="d-flex gap-2">
+              <a href="/colaborador/holerite/{{this.id}}/ver" class="btn btn-sm btn-primary">Visualizar</a>
+              <a href="/colaborador/holerite/{{this.id}}/download" class="btn btn-sm btn-outline-secondary">⬇️ Baixar</a>
+            </div>
+          </div>
+        {{/each}}
+      {{else}}
+        <p>Nenhum documento disponível.</p>
+      {{/if}}
+    </div>
+
+    <div class="paginacao">
+      {{!-- controles de paginação se precisar --}}
+    </div>
+  </main>
 </div>
 
-<div class="holerites-grid">
-  <div class="holerite-card">
-    <h4>Holerite MM/AAAA</h4>
-    <p>Folha de pagamento</p>
-    <p>Data: DD/MM/AAAA</p>
-    <p>Tamanho: X.X MB</p>
-    <button>👁️ Visualizar</button>
-    <button>⬇️</button>
-  </div>
-</div>
-
-<div class="paginacao">
-  <button>◀ Antes</button>
-  <button>1</button>
-  <button>2</button>
-  <button>▶ Próxima</button>
-</div>
+<script>
+  document.getElementById('baixarTodosBtn')?.addEventListener('click', () => {
+    // implementar download zip no backend: endpoint /colaborador/holerites/baixar-tudo
+    alert('Funcionalidade de baixar todos precisa ser implementada no backend.');
+  });
+</script>

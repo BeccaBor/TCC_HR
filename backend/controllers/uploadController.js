@@ -54,21 +54,27 @@ const uploadController = {
         return res.status(400).json({ erro: 'O tipo do documento é obrigatório.' });
       }
 
-      // Extrai nome do arquivo
-      const nomeArquivo = path.basename(req.file.path);
-      const caminhoParaSalvar = path.join('uploads', nomeArquivo).replace(/\\/g, '/');
+      // Nome original do arquivo e nome salvo
+      const nomeArquivo = req.file.originalname;
+      const nomeGerado = req.file.filename;
+      const caminhoParaSalvar = path.join('uploads', nomeGerado).replace(/\\/g, '/');
 
       console.log('Caminho para salvar no BD:', caminhoParaSalvar);
 
       // Registrar no banco de dados
-      const resultado = await UploadModel.registrarUpload(usuarioId, tipoDocumento, caminhoParaSalvar);
+      const resultado = await UploadModel.registrarUpload(
+        usuarioId,
+        tipoDocumento,
+        caminhoParaSalvar,
+        nomeArquivo
+      );
       console.log('Registro no BD realizado:', resultado);
 
       res.status(201).json({
         mensagem: 'Upload realizado com sucesso.',
-        fileName: req.file.filename,
+        fileName: nomeArquivo,
         filePath: caminhoParaSalvar,
-        id: resultado.insertId // Adiciona o ID do registro
+        id: resultado.insertId
       });
     } catch (error) {
       console.error('Erro no controlador ao realizar upload:', error);

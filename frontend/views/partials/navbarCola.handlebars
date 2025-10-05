@@ -1,66 +1,270 @@
+<link rel="stylesheet" href="/css/navbarCola.css">
+{{!-- <link rel="stylesheet" href="/css/colaborador.css"> --}}
 
-<nav class="d-flex justify-content-between align-items-center p-3">
-     <img src="./img/Conecthar.png" alt="" height="60" width="190">
-  <div class="d-flex gap-5">
-    <a href="/colaborador/dados" class="btnNav btn btn-secondary">Inicio</a>
-    <a href="/documentacaoCola" class="btnNav btn btn-secondary">Documentação</a>
-    <a href="/solicitacoesCola" class="btnNav btn btn-secondary">Solicitações</a>
+<nav class="navbar-cola d-flex justify-content-between align-items-center" role="navigation" aria-label="Navbar Colaborador">
+  <!-- Brand -->
+  <div class="brand-left d-flex align-items-center">
+    <a href="/" class="d-flex align-items-center" aria-label="Ir para home">
+      <img src="/img/Conecthar.png" alt="Conecthar" height="36" width="160">
+    </a>
   </div>
-<!-- Ícone com dropdown -->
-<div class="dropdown">
-  <a class="btn dropdown-toggle p-0 border-0 bg-transparent" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Minha Conta">
-    <i class="bi bi-person-circle fs-3"></i>
-  </a>
 
-  <ul class="dropdown-menu dropdown-menu-end">
-    <li><a class="dropdown-item" href="/perfil">Perfil</a></li>
-    <li><a class="dropdown-item" href="#" id="openLogoutModal">Sair</a></li>
-  </ul>
+  <!-- Links centrais -->
+<!-- Links centrais -->
+<div class="d-flex gap-4 nav-links" role="menubar" aria-label="Links principais">
+  <a href="/colaborador/dados" class="btnNav btn {{ifActive '/colaborador'}}" role="menuitem">Início</a>
+  <a href="/colaborador/documentacaoCola" class="btnNav btn {{ifActive '/colaborador/documentacaoCola'}}" role="menuitem">Documentação</a>
+  <a href="/colaborador/solicitacoesCola" class="btnNav btn {{ifActive '/colaborador/solicitacoesCola'}}" role="menuitem">Solicitações</a>
+  <a href="/colaborador/holerites" class="btnNav btn {{ifActive '/colaborador/holerites'}}" role="menuitem">Holerites</a>
+  <a href="/colaborador/pontoColaborador" class="btnNav btn {{ifActive '/colaborador/pontoColaborador'}}" role="menuitem">Ponto</a>
 </div>
 
-<!-- Modal de confirmação -->
-<div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
+
+  <!-- Ações (direita) -->
+  <div class="d-flex align-items-center gap-3 nav-actions">
+    <!-- Botão de perfil: abre popover com 2 botões (Ver perfil / Sair) -->
+    <button id="profileToggle"
+            class="btn-profile"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="profile-popover"
+            aria-label="Abrir opções de perfil"
+            title="Perfil"
+            data-username="{{usuario.nome}}"
+            data-initialized="0">
+      {{#if usuario.foto}}
+        <img src="/uploads/{{usuario.foto}}" alt="Avatar de {{usuario.nome}}" class="avatar-sm">
+      {{else}}
+        <div class="avatar-initials" aria-hidden="true">U</div>
+      {{/if}}
+    </button>
+
+    <!-- Three-dots (opcional) - sem comportamento automático -->
+    <button id="btnMenu" class="btn btn-link p-0" type="button" aria-label="Mais opções">
+      <i class="bi bi-three-dots-vertical" aria-hidden="true"></i>
+    </button>
+  </div>
+</nav>
+
+<div class="linha" aria-hidden="true"></div>
+
+<!-- Modal Bootstrap de confirmação (só abre por ação do usuário) -->
+<div class="modal fade" id="confirmLogoutModal" tabindex="-1" aria-labelledby="confirmLogoutTitle" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
     <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="logoutModalLabel">Confirmar saída</h5>
+      <div class="modal-header border-0">
+        <h5 class="modal-title" id="confirmLogoutTitle">Confirmar logout</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
       </div>
-      <div class="modal-body">
-        Tem certeza que deseja sair da sua conta?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" id="logoutBtn" class="btn btn-danger">Sair</button>
+      <div class="modal-body text-center">
+        <p>Tem certeza que deseja sair da sua conta?</p>
+        <div class="d-flex gap-2 justify-content-between mt-3">
+          <button class="btn btn-secondary flex-fill" data-bs-dismiss="modal">Cancelar</button>
+          <button class="btn btn-danger flex-fill" id="confirmLogoutBtn">Sair</button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+/*
+ NavbarCola refatorado — comportamento robusto do popover + logout
+ - Usa data-username para inicializar as iniciais quando não há foto
+ - Protege contra múltiplas inicializações
+ - Fallback sem Bootstrap
+ - Acessibilidade (foco/teclado)
+ - Abre somente por ação humana (event.isTrusted)
+*/
+(function () {
   document.addEventListener('DOMContentLoaded', () => {
-    const openLogoutModalBtn = document.getElementById('openLogoutModal');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const logoutModalEl = document.getElementById('logoutModal');
-    const logoutModal = new bootstrap.Modal(logoutModalEl);
+    const BACKEND_URL = (typeof window !== 'undefined' && window.BACKEND_URL) ? window.BACKEND_URL : 'http://localhost:3001';
+    const profileToggle = document.getElementById('profileToggle');
+    const confirmLogoutModalEl = document.getElementById('confirmLogoutModal');
 
-    // Abre o modal ao clicar no link "Sair"
-    openLogoutModalBtn.addEventListener('click', (e) => {
-      e.preventDefault(); // evita navegação
-      logoutModal.show();
+    if (!profileToggle) return;
+
+    // Evita reinicializar caso já tenha sido inicializado
+    if (profileToggle.dataset.initialized === '1') return;
+    profileToggle.dataset.initialized = '1';
+
+    // Se não houver foto, monta a inicial a partir do data-username
+    try {
+      const initialsEl = profileToggle.querySelector('.avatar-initials') || document.querySelector('.avatar-initials');
+      if (initialsEl) {
+        const username = profileToggle.getAttribute('data-username') || '';
+        const initial = (username && username.trim().length) ? username.trim().charAt(0).toUpperCase() : 'U';
+        initialsEl.textContent = initial;
+      }
+    } catch (e) { /* silent */ }
+
+    let popoverInstance = null;
+    let outsideClickHandler = null;
+    let escHandler = null;
+
+    function escapeHtml(str = '') {
+      return String(str).replace(/[&<>"'`=\/]/g, s => {
+        return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','/':'&#x2F;','`':'&#96;','=':'&#61;' }[s]);
+      });
+    }
+
+    function buildPopoverHtml(user = {}) {
+      const nome = user.nome ? escapeHtml(user.nome) : 'Usuário';
+      const tipo = user.tipo_usuario ? escapeHtml(user.tipo_usuario) : '';
+      const foto = user.foto ? escapeHtml(user.foto) : null;
+
+      return `
+        <div id="profile-popover" class="popover-profile" style="min-width:220px;">
+          <div class="d-flex" style="gap:.6rem;padding:10px 12px;align-items:center;">
+            <div style="width:44px;height:44px;border-radius:8px;overflow:hidden;flex:0 0 44px;display:grid;place-items:center;background:rgba(255,255,255,0.02);font-weight:700;color:inherit;">
+              ${foto ? `<img src="/uploads/${foto}" style="width:100%;height:100%;object-fit:cover;" alt="Avatar">` : escapeHtml(nome.charAt(0))}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:.95rem;">${nome}</div>
+              <div style="font-size:.78rem;color:rgba(0,0,0,0.55)">${tipo}</div>
+            </div>
+          </div>
+          <div style="padding:8px 10px;display:flex;flex-direction:column;gap:8px;">
+            <button id="popoverViewProfile" class="btn btn-sm btn-outline-secondary btn-popover-action" type="button" style="text-align:left;">Ver perfil</button>
+            <button id="popoverLogoutBtn" class="btn btn-sm btn-danger btn-popover-action" type="button">Sair</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function hidePopover() {
+      if (!popoverInstance) return;
+      try { popoverInstance.hide(); } catch (e) { /* ignore */ }
+      try { popoverInstance.dispose(); } catch (e) { /* ignore */ }
+      if (popoverInstance._fallbackEl) {
+        try { popoverInstance._fallbackEl.remove(); } catch (e) { /* ignore */ }
+      }
+      popoverInstance = null;
+      profileToggle.setAttribute('aria-expanded', 'false');
+
+      if (outsideClickHandler) { document.removeEventListener('click', outsideClickHandler); outsideClickHandler = null; }
+      if (escHandler) { document.removeEventListener('keydown', escHandler); escHandler = null; }
+    }
+
+    async function toggleProfilePopover(e) {
+      // abre só por ação humana
+      if (e && e.isTrusted === false) return;
+
+      // se já aberto, fecha
+      if (popoverInstance) { hidePopover(); return; }
+
+      // token obrigatório
+      const token = localStorage.getItem('token');
+      if (!token) { window.location.href = '/'; return; }
+
+      // busca dados do usuário (silencioso se falhar)
+      let usuario = {};
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/auth/me`, { headers: { Authorization: 'Bearer ' + token } });
+        if (!res.ok) { localStorage.removeItem('token'); window.location.href = '/'; return; }
+        const j = await res.json();
+        usuario = j.usuario || {};
+      } catch (err) {
+        console.warn('Erro ao buscar usuário para popover:', err);
+      }
+
+      const useBootstrap = (typeof window.bootstrap !== 'undefined' && window.bootstrap.Popover);
+      if (useBootstrap) {
+        popoverInstance = new bootstrap.Popover(profileToggle, {
+          content: buildPopoverHtml(usuario),
+          html: true,
+          sanitize: false, // atenção: sanitize:false permite HTML — sanitize no backend se dados vierem do usuário
+          trigger: 'manual',
+          placement: 'bottom',
+          container: 'body'
+        });
+        popoverInstance.show();
+      } else {
+        // fallback manual
+        const div = document.createElement('div');
+        div.className = 'popover fallback-popover';
+        div.setAttribute('role', 'dialog');
+        div.innerHTML = buildPopoverHtml(usuario);
+        document.body.appendChild(div);
+        const rect = profileToggle.getBoundingClientRect();
+        div.style.position = 'absolute';
+        const left = Math.min(window.innerWidth - 240, Math.max(8, rect.left + window.scrollX));
+        div.style.left = left + 'px';
+        div.style.top = (rect.bottom + 8 + window.scrollY) + 'px';
+        popoverInstance = { _fallbackEl: div, hide() { try { div.remove(); } catch(e){} }, dispose() { try { div.remove(); } catch(e){} } };
+      }
+
+      profileToggle.setAttribute('aria-expanded', 'true');
+
+      // conectar listeners internos após render
+      requestAnimationFrame(() => {
+        const pop = document.querySelector('.popover') || document.querySelector('.fallback-popover');
+        if (!pop) return;
+        const viewBtn = pop.querySelector('#popoverViewProfile');
+        const logoutBtn = pop.querySelector('#popoverLogoutBtn');
+
+        viewBtn?.addEventListener('click', () => { hidePopover(); window.location.href = '/colaborador/perfil'; });
+        logoutBtn?.addEventListener('click', () => {
+          hidePopover();
+          if (useBootstrap && confirmLogoutModalEl) {
+            const inst = new bootstrap.Modal(confirmLogoutModalEl);
+            inst.show();
+          } else {
+            if (confirm('Deseja sair da sua conta?')) performLogout();
+          }
+        });
+
+        // foco no primeiro elemento interno (acessibilidade)
+        const firstFocusable = pop.querySelector('button, a, [tabindex]:not([tabindex="-1"])');
+        if (firstFocusable) firstFocusable.focus();
+      });
+
+      // fechar ao clicar fora ou pressionar ESC
+      outsideClickHandler = (ev) => {
+        const pop = document.querySelector('.popover') || document.querySelector('.fallback-popover');
+        if (!pop) return;
+        if (profileToggle.contains(ev.target) || pop.contains(ev.target)) return;
+        hidePopover();
+      };
+      escHandler = (ev) => { if (ev.key === 'Escape') hidePopover(); };
+
+      document.addEventListener('click', outsideClickHandler);
+      document.addEventListener('keydown', escHandler);
+    }
+
+    async function performLogout() {
+      try {
+        const token = localStorage.getItem('token');
+        await fetch(`${BACKEND_URL}/api/auth/logout`, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+      } catch (err) {
+        console.warn('Erro no logout:', err);
+      } finally {
+        localStorage.removeItem('token');
+        try { 
+          const inst = (window.bootstrap && window.bootstrap.Modal) ? bootstrap.Modal.getInstance(confirmLogoutModalEl) : null;
+          if (inst) inst.hide();
+        } catch(e) { /* ignore */ }
+        window.location.href = '/';
+      }
+    }
+
+    // listeners para o botão do perfil
+    profileToggle.addEventListener('click', toggleProfilePopover);
+    profileToggle.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggleProfilePopover(ev); }
+      if (ev.key === 'Tab') hidePopover();
     });
 
-    // Ao confirmar logout
-   document.getElementById('logoutBtn').addEventListener('click', async () => {
-  try {
-    await fetch('http://localhost:3001/logout', { method: 'POST' });
-  } catch (err) {
-    console.error('Erro no logout:', err);
-  } finally {
-    localStorage.removeItem('token');
-    sessionStorage.removeItem('token');
-    window.location.href = '/';
-  }
-});
+    // confirm logout modal button
+    const confirmBtn = document.getElementById('confirmLogoutBtn');
+    confirmBtn?.addEventListener('click', (ev) => { ev.preventDefault(); performLogout(); });
+
+    // cleanup on unload
+    window.addEventListener('unload', () => { hidePopover(); });
   });
+})();
 </script>

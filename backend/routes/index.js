@@ -1,3 +1,4 @@
+// routes/index.js
 const express = require('express');
 const router = express.Router();
 
@@ -6,18 +7,19 @@ const authRoutes = require('./authRoutes');
 const gestorRoutes = require('./gestorRoutes');
 const colaboradorRoutes = require('./colaboradorRoutes');
 const uploadRoutes = require('./uploadRoutes');
-const { verificarToken } = require('../middlewares/authMiddleware');
+const pontoRoutes = require('./pontoRoutes');
+const setorRoutes = require('./setorRoutes');
+const solicitacoesRoutes = require('./solicitacoesRoutes');
+// Observação:
+// - Não aplicamos verificarToken aqui globalmente para grupos inteiros,
+//   porque cada router (gestor/colaborador) controla quais endpoints são públicos ou protegidos.
+// - O app monta esse router como /api (no backend/index.js): app.use('/api', routes);
 
-// Rotas de autenticação (login, register)
 router.use('/auth', authRoutes);
-
-// Rotas de gestores (protegidas internamente pelo middleware do gestorRoutes)
-router.use('/gestor', verificarToken, gestorRoutes);
-
-// Rotas de colaboradores (protegidas internamente pelo middleware do colaboradorRoutes)
-router.use('/colaborador', verificarToken, colaboradorRoutes);
-
-// Rotas de upload (pode verificar token dentro do uploadRoutes se necessário)
-router.use('/upload', verificarToken, uploadRoutes);
-
+router.use('/colaborador', colaboradorRoutes);
+router.use('/gestor', gestorRoutes);
+router.use('/upload', uploadRoutes);
+router.use('/ponto', pontoRoutes);
+router.use('/setor', setorRoutes);
+router.use('/solicitacoes', solicitacoesRoutes);
 module.exports = router;

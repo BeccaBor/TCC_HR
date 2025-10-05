@@ -1,28 +1,52 @@
-{{#*inline "styles"}}
-  <link rel="stylesheet" href="/css/doc.css"> 
-{{/inline}}
+
+  <link rel="stylesheet" href="/css/documentacaoGestor.css"> 
+
 
 <div class="page-wrapper">
   {{> navbar }}
   <div class="cola-layout">
-    {{> sidebar }}
+    {{!-- {{> sidebar }} --}}
 
-    <main class="content p-4">
-      <h4>{{titulo}}</h4>
-      <p>{{descricao}}</p>
+   <main class="content p-4">
+      <h4>Documentação</h4>
+      <p>Gerencie seus documentos de forma simples e organizada</p>
 
-      <div class="col-md-9">
-        <!-- Área de upload -->
+      <div class="col-md-12">
+        <!-- Área de upload melhorada -->
         <div class="upload rounded p-5 text-center my-4" style="background-color: rgba(255, 255, 255, 0.534); box-shadow: 5px 5px 5px rgba(50, 50, 77, 0.329);">
           <i class="bi bi-cloud-arrow-up" style="font-size: 2rem;"></i>
           <h5 class="mt-3">Carregar seu arquivo aqui ou arraste</h5>
-          <p class="text-muted">Formatos suportados: pdf, jpg, jpeg, png, jiff</p>
+          <p class="text-muted">Formatos suportados: JPG, JPEG, PNG, GIF, PDF, DOC, DOCX, TXT, XLS, XLSX</p>
 
           <!-- Formulário de upload -->
           <form id="uploadForm" enctype="multipart/form-data">
-            <input type="file" id="fileInput" name="arquivo" style="display:none" />
-            <button type="button" id="btnUpload" class="btn" style="background-color: rgba(255, 255, 255, 0.719); box-shadow: 5px 5px 5px rgba(50, 50, 77, 0.329);">
-              <i class="bi bi-file-earmark-arrow-up me-2"></i> Carregar arquivo
+            <input type="file" id="fileInput" name="documento" style="display:none" 
+                   accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.xls,.xlsx" />
+            
+            <button type="button" id="btnSelectFile" class="btn btn-outline-secondary mb-3">
+              <i class="bi bi-file-earmark-arrow-up me-2"></i> Selecionar arquivo
+            </button>
+            
+            <p id="fileName" class="text-success mt-2" style="display:none;"></p>
+            
+            <!-- Seletor de categoria -->
+            <div class="mt-3 mb-3">
+              <label for="tipoDocumento" class="form-label">Categoria do documento</label>
+              <select id="tipoDocumento" name="tipo_documento" class="form-select" 
+                      style="max-width: 400px; margin: 0 auto;" required>
+                <option value="">Selecione a categoria</option>
+                <option value="contrato">📋 Contratos</option>
+                <option value="recibo">📄 Recibos</option>
+                <option value="atestado">🏥 Atestados médicos</option>
+                <option value="holerite">💰 Holerites</option>
+                <option value="declaracao">📑 Comprov. de férias</option>
+                <option value="outros">📁 Outros documentos</option>
+              </select>
+            </div>
+            
+            <!-- Botão de envio -->
+            <button type="submit" id="btnEnviar" class="btn btn-primary" disabled>
+              <i class="bi bi-upload me-2"></i> Enviar Documento
             </button>
           </form>
 
@@ -30,187 +54,305 @@
           <p id="uploadError" class="mt-3 text-danger" style="display:none;"></p>
         </div>
 
-        <!-- Lista de arquivos -->
-        <div class="row g-3" id="arquivosContainer">
-          <p class="text-muted">Carregando documentos...</p>
+        <!-- Seção de documentos carregados -->
+        <div class="row">
+          <div class="col-md-12">
+            <h5>📂 Meus Documentos</h5>
+            <div class="row g-3" id="arquivosContainer">
+              <div class="col-12">
+                <p class="text-muted">Carregando documentos...</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Paginação -->
-        <div class="paginacao d-flex justify-content-end align-items-center mt-3">
-          <p class="me-3" id="paginacaoInfo" style="margin-top: 10px;">Mostrando 0 de 0 documentos</p>
-          <button class="btn me-2" id="btnAntes" disabled>Antes</button>
-          <button class="btn me-2" id="btnPagina1" disabled>1</button>
-          <button class="btn me-2" id="btnPagina2">2</button>
-          <button class="btn me-2" id="btnPagina3">3</button>
-          <button class="btn" id="btnProxima">Próxima</button>
+        <div class="paginacao d-flex justify-content-end align-items-center mt-4">
+          <p class="me-3" id="paginacaoInfo">Mostrando 0 de 0 documentos</p>
+          <button class="btn btn-outline-secondary me-2" id="btnAntes" disabled>Anterior</button>
+          <span class="me-2">
+            <button class="btn btn-secondary me-1" id="btnPagina1" disabled>1</button>
+            <button class="btn btn-outline-secondary me-1" id="btnPagina2">2</button>
+            <button class="btn btn-outline-secondary me-1" id="btnPagina3">3</button>
+          </span>
+          <button class="btn btn-outline-secondary" id="btnProxima">Próxima</button>
         </div>
       </div>
     </main>
   </div>
 </div>
 
-<!-- Modal de seleção de categoria -->
-<div id="categoriaModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
-  <div class="modal-content bg-white p-4 rounded shadow" style="width:400px;">
-    <h5>Selecione a categoria do arquivo</h5>
-    <select id="categoriaSelect" class="form-select mt-3">
-      <option value="contrato">Contrato</option>
-      <option value="holerite">Holerite</option>
-      <option value="atestado">Atestado</option>
-      <option value="recibo">Recibo</option>
-      <option value="declaracao">Declaração</option>
-      <option value="outros">Outros</option>
-    </select>
-    <div class="mt-4 text-end">
-      <button id="salvarCategoria" class="btn btn-primary">Salvar</button>
-      <button id="cancelarCategoria" class="btn btn-secondary">Cancelar</button>
-    </div>
-  </div>
-</div>
-
 <script>
-  const BACKEND_URL = '{{BACKEND_URL}}';
-  const token = localStorage.getItem("token"); // JWT salvo no login
+const token = localStorage.getItem("token"); 
+const BACKEND_URL = '{{BACKEND_URL}}';
 
-  let arquivoSelecionado = null;
-  let ultimoUploadId = null;
+// Elementos do DOM
+const fileInput = document.getElementById("fileInput");
+const btnSelectFile = document.getElementById("btnSelectFile");
+const btnEnviar = document.getElementById("btnEnviar");
+const uploadForm = document.getElementById("uploadForm");
+const uploadStatus = document.getElementById("uploadStatus");
+const uploadError = document.getElementById("uploadError");
+const arquivosContainer = document.getElementById("arquivosContainer");
+const fileNameDisplay = document.getElementById("fileName");
+const tipoDocumentoSelect = document.getElementById("tipoDocumento");
 
-  const fileInput = document.getElementById("fileInput");
-  const btnUpload = document.getElementById("btnUpload");
-  const uploadStatus = document.getElementById("uploadStatus");
-  const uploadError = document.getElementById("uploadError");
+// Variáveis de controle
+let arquivoSelecionado = null;
 
-  const modal = document.getElementById("categoriaModal");
-  const btnSalvarCategoria = document.getElementById("salvarCategoria");
-  const btnCancelarCategoria = document.getElementById("cancelarCategoria");
+// Verificar se token é válido
+async function verificarTokenValido() {
+  const tokenLocal = localStorage.getItem('token') || sessionStorage.getItem('token');
+  
+  if (!tokenLocal) {
+    showError('Token não encontrado. Redirecionando para login...');
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 3000);
+    return false;
+  }
 
-  btnUpload.addEventListener("click", () => fileInput.click());
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/auth/me`, {
+      method: 'GET',
+      headers: { "Authorization": `Bearer ${tokenLocal}` }
+    });
+
+    if (!response.ok) {
+      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
+      showError('Token expirado ou inválido. Redirecionando para login...');
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 3000);
+      return false;
+    }
+
+    const data = await response.json();
+    console.log('Token válido para usuário:', data.usuario?.nome || data.nome);
+    return true;
+  } catch (error) {
+    console.error('Erro ao verificar token:', error);
+    showError('Erro de conexão. Verifique se o servidor está rodando.');
+    return false;
+  }
+}
+
+// Inicialização
+document.addEventListener('DOMContentLoaded', async () => {
+  console.log('Página carregada');
+  await verificarTokenValido();
+  await carregarMeusUploads();
+  configurarEventListeners();
+});
+
+// Configurar event listeners
+function configurarEventListeners() {
+  btnSelectFile.addEventListener("click", () => fileInput.click());
 
   fileInput.addEventListener("change", (e) => {
-    if (!e.target.files.length) return;
-    arquivoSelecionado = e.target.files[0];
-    enviarArquivo(arquivoSelecionado);
+    if (e.target.files.length > 0) {
+      arquivoSelecionado = e.target.files[0];
+      fileNameDisplay.textContent = `Arquivo selecionado: ${arquivoSelecionado.name}`;
+      fileNameDisplay.style.display = 'block';
+      validarFormulario();
+    } else {
+      arquivoSelecionado = null;
+      fileNameDisplay.style.display = 'none';
+      validarFormulario();
+    }
   });
 
-  async function enviarArquivo(arquivo) {
-    const formData = new FormData();
-    formData.append("arquivo", arquivo);
+  tipoDocumentoSelect.addEventListener('change', validarFormulario);
 
-    try {
-      showStatus("Enviando arquivo...");
-      const response = await fetch(`${BACKEND_URL}/upload`, {
-        method: "POST",
-        body: formData,
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-
-      const data = await response.json();
-
-      if (response.ok && data.sucesso) {
-        showStatus("✅ Upload realizado com sucesso!");
-        ultimoUploadId = data.uploadId; 
-        setTimeout(() => hideStatus(), 3000);
-        listarArquivos();
-        abrirModalCategoria();
-      } else {
-        showError(`❌ Erro: ${data.erro || data.message}`);
-      }
-    } catch (err) {
-      showError("❌ Erro ao enviar arquivo: " + err.message);
-    } finally {
-      fileInput.value = "";
-    }
-  }
-
-  function abrirModalCategoria() {
-    if (modal) {
-      modal.style.display = "flex";
-    }
-  }
-
-  btnCancelarCategoria.addEventListener("click", () => {
-    modal.style.display = "none";
+  uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    await enviarArquivo();
   });
+}
 
-  btnSalvarCategoria.addEventListener("click", async () => {
-    const categoria = document.getElementById("categoriaSelect").value;
-    try {
-      const response = await fetch(`${BACKEND_URL}/upload/categoria/${ultimoUploadId}`, {
-        method: "PUT",
-        headers: { 
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({ categoria })
-      });
-      if (response.ok) {
-        showStatus("✅ Categoria salva com sucesso!");
-      } else {
-        showError("❌ Erro ao salvar categoria.");
-      }
-    } catch (err) {
-      showError("❌ Erro: " + err.message);
+// Validar se formulário está completo
+function validarFormulario() {
+  const temArquivo = arquivoSelecionado !== null;
+  const temCategoria = tipoDocumentoSelect.value.trim() !== '';
+  btnEnviar.disabled = !(temArquivo && temCategoria);
+}
+
+// Enviar arquivo
+async function enviarArquivo() {
+  const tokenLocal = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const tipoDocumento = tipoDocumentoSelect.value.trim();
+  
+  if (!tokenLocal) return showError('Token não encontrado. Faça login novamente.');
+  if (!arquivoSelecionado) return showError('Selecione um arquivo primeiro.');
+  if (!tipoDocumento) return showError('Selecione a categoria do documento.');
+
+  const formData = new FormData();
+  formData.append("documento", arquivoSelecionado);
+  formData.append("tipo_documento", tipoDocumento);
+
+  try {
+    showStatus("Enviando arquivo...");
+    btnEnviar.disabled = true;
+    
+    const response = await fetch(`${BACKEND_URL}/api/upload/usuario/upload`, {
+      method: "POST",
+      body: formData,
+      headers: { "Authorization": `Bearer ${tokenLocal}` }
+    });
+
+    if (!response.ok) throw new Error(`Erro ${response.status}: ${await response.text()}`);
+
+    const data = await response.json();
+    if (data.mensagem || data.id) {
+      showStatus(`Upload realizado com sucesso! 🎉`);
+
+      uploadForm.reset();
+      arquivoSelecionado = null;
+      fileNameDisplay.style.display = 'none';
+      tipoDocumentoSelect.value = '';
+      validarFormulario();
+
+      setTimeout(async () => {
+        hideStatus();
+        await carregarMeusUploads();
+      }, 2000);
+    } else {
+      showError(`Erro: ${data.erro || 'Erro desconhecido'}`);
     }
-    modal.style.display = "none";
-  });
+  } catch (err) {
+    console.error('Erro no upload:', err);
+    showError("Erro ao enviar arquivo: " + err.message);
+  } finally {
+    btnEnviar.disabled = false;
+    validarFormulario();
+  }
+}
 
-  function showStatus(message) {
-    uploadStatus.textContent = message;
-    uploadStatus.style.display = "block";
-    uploadError.style.display = "none";
+// Carregar uploads do usuário
+async function carregarMeusUploads() {
+  const tokenLocal = localStorage.getItem('token') || sessionStorage.getItem('token');
+  
+  if (!tokenLocal) {
+    arquivosContainer.innerHTML = '<div class="col-12"><p class="text-danger">Token não encontrado.</p></div>';
+    return;
   }
 
-  function showError(message) {
-    uploadError.textContent = message;
-    uploadError.style.display = "block";
-    uploadStatus.style.display = "none";
-  }
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/upload/usuario/uploads`, {
+      headers: { 'Authorization': `Bearer ${tokenLocal}` }
+    });
 
-  function hideStatus() {
-    uploadStatus.style.display = "none";
-    uploadError.style.display = "none";
-  }
+    if (!response.ok) throw new Error(`Erro HTTP ${response.status}`);
 
-  async function listarArquivos() {
-    try {
-      const response = await fetch(`${BACKEND_URL}/documentos`, {
-        headers: { "Authorization": `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Erro ao carregar documentos');
-      const arquivos = await response.json();
-
-      const arquivosContainer = document.getElementById("arquivosContainer");
-      arquivosContainer.innerHTML = arquivos.length 
-        ? "" 
-        : '<p class="text-muted">Nenhum documento encontrado.</p>';
-
-      arquivos.forEach((arquivo) => {
-        const div = document.createElement('div');
-        div.classList.add('col-md-3', 'mb-3');
-        div.innerHTML = `
-          <div class="card" style="width: 18rem;">
-            <img src="${BACKEND_URL}/uploads/${arquivo}" class="card-img-top" alt="Arquivo">
-            <div class="card-body">
-              <p class="card-text">${arquivo}</p>
-            </div>
-          </div>`;
-        arquivosContainer.appendChild(div);
-      });
-
-      atualizarPaginacao(arquivos.length);
-    } catch (err) {
-      showError("❌ Erro ao listar arquivos.");
+    const data = await response.json();
+    if (data.uploads && data.uploads.length > 0) {
+      exibirUploads(data.uploads);
+    } else {
+      arquivosContainer.innerHTML = '<div class="col-12"><p class="text-muted">Nenhum documento carregado ainda.</p></div>';
     }
+
+    atualizarPaginacao(data.uploads ? data.uploads.length : 0);
+  } catch (err) {
+    console.error('Erro ao carregar uploads:', err);
+    arquivosContainer.innerHTML = '<div class="col-12"><p class="text-danger">Erro ao carregar documentos.</p></div>';
+  }
+}
+
+// Exibir uploads na tela (mostra ícone, categoria e NOME do arquivo)
+function exibirUploads(uploads) {
+  const icones = {
+    'contrato': '📋',
+    'recibo': '📄', 
+    'atestado': '🏥',
+    'holerite': '💰',
+    'declaracao': '📑',
+    'outros': '📁'
+  };
+
+  arquivosContainer.innerHTML = uploads.map(upload => `
+    <div class="col-12 col-md-6 col-lg-4 mb-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h6 class="card-title">
+            ${icones[upload.tipo_documento] || '📁'} ${upload.tipo_documento}
+          </h6>
+          <p class="card-text mb-2">
+            <strong style="word-break:break-all;">${upload.nome_arquivo || 'Sem nome'}</strong><br>
+            <small class="text-muted">
+              Enviado em: ${new Date(upload.data_upload).toLocaleDateString('pt-BR')}
+            </small>
+          </p>
+          <button type="button" class="btn btn-sm btn-outline-primary"
+                  onclick="visualizarDocumento('${upload.id}')">
+            <i class="bi bi-eye"></i> Visualizar
+          </button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Visualizar documento via fetch (envia token no header)
+async function visualizarDocumento(id) {
+  const tokenLocal = localStorage.getItem('token') || sessionStorage.getItem('token');
+  if (!tokenLocal) {
+    return showError('Token não encontrado. Faça login novamente.');
   }
 
-  function atualizarPaginacao(totalArquivos) {
-    const paginacaoInfo = document.getElementById("paginacaoInfo");
-    const btnAntes = document.getElementById("btnAntes");
-    const btnProxima = document.getElementById("btnProxima");
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/upload/download/${id}`, {
+      method: "GET",
+      headers: { "Authorization": `Bearer ${tokenLocal}` }
+    });
 
-    const paginas = Math.ceil(totalArquivos / 10);
-    paginacaoInfo.textContent = `Mostrando 1 de ${paginas} documentos`;
-    btnAntes.disabled = true;
-    btnProxima.disabled = paginas <= 1;
+    if (!response.ok) {
+      // tenta pegar mensagem do body (se for JSON)
+      let msg = `Erro HTTP ${response.status}`;
+      try {
+        const json = await response.json();
+        msg = json.message || json.erro || JSON.stringify(json);
+      } catch (e) { /* corpo não JSON */ }
+      throw new Error(msg);
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    // opcional: revogar URL depois de um tempo
+    setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
+  } catch (err) {
+    console.error("Erro ao visualizar:", err);
+    showError("Erro ao abrir documento: " + (err.message || err));
   }
+}
+
+// Funções de feedback
+function showStatus(message) {
+  uploadStatus.textContent = message;
+  uploadStatus.style.display = "block";
+  uploadError.style.display = "none";
+}
+function showError(message) {
+  uploadError.textContent = message;
+  uploadError.style.display = "block";
+  uploadStatus.style.display = "none";
+}
+function hideStatus() {
+  uploadStatus.style.display = "none";
+  uploadError.style.display = "none";
+}
+
+// Paginação (placeholder simples)
+function atualizarPaginacao(totalArquivos) {
+  const paginacaoInfo = document.getElementById("paginacaoInfo");
+  const btnAntes = document.getElementById("btnAntes");
+  const btnProxima = document.getElementById("btnProxima");
+
+  if (paginacaoInfo) {
+    paginacaoInfo.textContent = `Mostrando ${totalArquivos} de ${totalArquivos} documentos`;
+    if (btnAntes) btnAntes.disabled = true;
+    if (btnProxima) btnProxima.disabled = totalArquivos <= 10;
+  }
+}
 </script>

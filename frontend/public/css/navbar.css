@@ -1,152 +1,318 @@
-/* .navbar{
-  position: sticky;
-  z-index: 1000;
-  top: 0;
-  background: rgb(255, 255, 255);
-} */
-.btnNav {
-    color: #45466B;
-    background-color: #fff;
-    /* border: 2px solid #ddd; */
-    border-radius: 18px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    box-shadow: 3px 3px 3px rgba(50, 50, 77, 0.329);
-    /* box-shadow: 4px 0 5px rgba(0, 0, 0, 0.2); */
+:root{
+  --glass-bg: rgba(255,255,255,0.08);
+  --glass-border: rgba(255,255,255,0.18);
+  --glass-highlight: rgba(255,255,255,0.22);
+  --glass-shadow: 0 12px 36px rgba(8,10,20,0.12);
+  --accent: #7b6cff;
+  --accent-strong: #5141c4;
+  --text: rgba(255,255,255,0.96);      /* texto principal branco */
+  --muted: rgba(255,255,255,0.78);     /* texto secundário mais claro */
+  --muted-weak: rgba(255,255,255,0.60);
+  --link-hover-bg: rgba(255,255,255,0.06);
+  --backdrop-blur: 10px;
+  --radius-lg: 12px;
+  --radius-sm: 8px;
+
+  /* sizing */
+  --nav-height: 62px;
 }
 
-.btnNav:hover {
-    background-color: #d0cddd;
-    /* Cor de fundo roxa clarinha */
-}
-
-.btnNav::before {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 2px;
-    background-color: #141153;
-    transition: width 0.4s ease;
-}
-
-.btnNav:hover::before {
-    width: 100%;
-}
-
-.linha {
-    border-bottom: 2px solid #ffffff;
-    box-shadow: 0px 0px 8px rgba(105, 105, 105, 0.3);
-}
-
-
-/* fundo escuro por trás */
-.modal-container {
-  display: none; /* mantém escondido por padrão */
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.6);
-  justify-content: center;
-  align-items: center;
-  /* display: flex; <- REMOVER */
-}
-
-
-/* caixinha estilo vidro */
-.modal-content {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2rem;
-  padding: 2.5rem 2rem;
-  width: 100%;
-  max-width: 420px;
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6),
-              inset 0 0 30px rgba(255, 255, 255, 0.05);
-  text-align: center;
-  animation: modalFade 0.35s ease;
-  position: relative;
-  backdrop-filter: blur(10px);
-  border: 1.5px solid rgba(255, 255, 255, 0.25);
-  color: #fff;
-}
-
-/* título */
-.modal-content h2 {
-  font-size: 1.5rem;
-  margin-bottom: 1.2rem;
-  font-weight: 600;
-  color: #fff;
-}
-
-/* texto */
-.modal-content p {
-  font-size: 1rem;
-  margin-bottom: 1.8rem;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-/* botões */
-.modal-actions {
+/* ---------------- Navbar (liquid glass) ---------------- */
+.navbar-cola {
   display: flex;
-  gap: 12px;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: var(--nav-height);
+  padding: 18px 18px;
+  position: sticky;
+  top: 10px;
+  z-index: 1200;
+
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(var(--backdrop-blur)) saturate(1.04);
+  -webkit-backdrop-filter: blur(var(--backdrop-blur)) saturate(1.04);
+
+  overflow: visible;
+  color: var(--text);
 }
 
-.modal-actions button,
-.modal-actions a {
-  flex: 1;
-  padding: 0.75rem;
-  border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 600;
+/* small padding tweak so content doesn't sit too alto */
+.navbar-cola .brand-left,
+.navbar-cola .nav-links,
+.navbar-cola .nav-actions {
+  display: flex;
+  align-items: center;
+}
+
+/* ---------------- thin divider under navbar ---------------- */
+.linha {
+  height: 12px;
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.04) inset;
+}
+
+/* ---------------- Brand ---------------- */
+.brand-left { margin-left: 6px; }
+.brand-left img {
+  height: 36px;
+  width: auto;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.06));
+}
+
+/* ---------------- Links (centro) ---------------- */
+.nav-links { display:flex; gap:12px; align-items:center; }
+
+/* btnNav: baseado na navbar do gestor, adaptado ao glass */
+.btnNav {
+  color: var(--text);
+  background-color: rgba(255, 255, 255, 0.03);
+  border-radius: 14px;
+  padding: 8px 14px;
+  font-size: 14px;
   cursor: pointer;
+  transition: transform .14s ease, box-shadow .14s ease, background-color .14s ease;
+  box-shadow: 0 6px 16px rgba(10,12,20,0.03);
+  border: 1px solid rgba(255,255,255,0.04);
   text-decoration: none;
-  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  -webkit-tap-highlight-color: transparent;
 }
 
-/* hover */
-.modal-actions button:hover,
-.modal-actions a:hover {
-  background: rgba(255, 255, 255, 0.35);
-  transform: translateY(-2px);
+/* hover / focus */
+.btnNav:hover,
+.btnNav:focus {
+  transform: translateY(-3px);
+  color: var(--accent);
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.06));
+  box-shadow: 0 12px 36px rgba(81,65,196,0.04);
 }
+.btnNav:active { transform: translateY(-1px); }
 
-/* botão sair mais forte */
-.logout-btn {
-  background: #6a5acd;
-  border: 1px solid #5a4ac7;
-}
-
-.logout-btn:hover {
-  background: #5a4ac7;
-}
-
-/* botão de fechar (X) */
-.close-btn {
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  font-size: 1.6rem;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.close-btn:hover {
+/* active state (visual para a rota atual) */
+.btnNav.active,
+.btnNav[aria-current="page"] {
+  background: linear-gradient(135deg, rgba(106,90,205,0.12), rgba(81,65,196,0.06));
   color: #fff;
+  border: 1px solid rgba(106,90,205,0.14);
+  box-shadow: 0 10px 28px rgba(81,65,196,0.06);
 }
 
-/* animação */
-@keyframes modalFade {
-  from { opacity: 0; transform: scale(0.95); }
-  to   { opacity: 1; transform: scale(1); }
+/* ---------------- Actions (direita) ---------------- */
+.nav-actions { display:flex; align-items:center; gap:10px; margin-right:6px; }
+
+/* profile button (avatar) */
+.btn-profile {
+  width:44px;
+  height:44px;
+  padding:0;
+  border-radius:10px;
+  display:inline-grid;
+  place-items:center;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.03);
+  cursor:pointer;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+.btn-profile:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
+.btn-profile:active { transform: translateY(0); }
+.btn-profile:focus-visible {
+  outline: 3px solid rgba(81,65,196,0.12);
+  outline-offset: 2px;
+}
+
+/* avatar image */
+.avatar-sm {
+  width:40px;
+  height:40px;
+  border-radius: 8px;
+  object-fit: cover;
+  display:block;
+  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+/* initials fallback */
+.avatar-initials {
+  width:40px;
+  height:40px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  background: linear-gradient(180deg, rgba(81,65,196,0.18), rgba(81,65,196,0.06));
+  color: var(--text);
+  font-weight:700;
+  font-size:1rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+}
+
+/* three-dots small button (opcional) */
+#btnMenu {
+  width:40px;
+  height:40px;
+  border-radius: 10px;
+  display:inline-grid;
+  place-items:center;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.03);
+  color: var(--text);
+  transition: background .12s ease, transform .12s ease;
+}
+#btnMenu:hover,
+#btnMenu:focus { background: var(--link-hover-bg); color: var(--accent); transform: translateY(-2px); }
+#btnMenu:focus-visible { outline: 3px solid rgba(81,65,196,0.12); outline-offset: 2px; }
+
+/* ---------------- Popover / Dropdown / Modal styling ---------------- */
+
+/* Popover main (Bootstrap override) */
+.popover {
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.18);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text);
+  min-width: 220px;
+  padding: 6px;
+  z-index: 1600;
+}
+
+/* Custom popover internal wrapper for better spacing */
+.popover-profile {
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  padding: 8px 6px;
+  color: var(--text);
+  backdrop-filter: blur(var(--backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+}
+
+/* no default padding so layout is exact */
+.popover .popover-body { padding: 0; }
+
+/* Fallback popover (manual) */
+.fallback-popover {
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  color: var(--text);
+  padding: 6px;
+  z-index: 1600;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.16);
+}
+
+/* Buttons inside the popover */
+.btn-popover-action {
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  border: none;
+  font-weight: 700;
+  transition: background .12s ease, color .12s ease;
+}
+.btn-popover-action:hover,
+.btn-popover-action:focus {
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  outline: none;
+}
+
+/* Separate styling for the logout button to be more prominent */
+.popover .btn-danger.btn-popover-action {
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  font-weight: 800;
+}
+.popover .btn-outline-secondary.btn-popover-action {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid rgba(255,255,255,0.03);
+}
+
+/* dropdown-menu (bootstrap fallback) */
+.dropdown-menu {
+  padding: 6px 0;
+  min-width: 200px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+}
+.dropdown-menu .dropdown-item {
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  padding: 10px 14px;
+  color: var(--muted);
+  font-weight: 700;
+  transition: background .12s ease, color .12s ease;
+}
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+}
+.dropdown-menu .dropdown-item.text-danger { color: #ffd7d7; font-weight:700; }
+
+/* small divider tweak */
+.dropdown-divider { margin: 6px 0; border-top: 1px solid rgba(255,255,255,0.04); }
+
+/* Modal (Bootstrap) content (glass) */
+#confirmLogoutModal .modal-content {
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--text);
+}
+#confirmLogoutModal .modal-header { border-bottom: none; }
+#confirmLogoutModal .modal-body { text-align:center; color: var(--text); }
+
+/* modal buttons */
+#confirmLogoutModal .btn { border-radius: 10px; padding: .5rem .75rem; font-weight:700; }
+#confirmLogoutModal .btn-secondary {
+  background: rgba(255,255,255,0.05);
+  color: var(--text);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+#confirmLogoutModal .btn-danger {
+  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+  color: #fff;
+  border: none;
+}
+
+/* ---------------- small helpers & accessibility ---------------- */
+.btn-link.p-0 { background: transparent; border: none; color: inherit; }
+
+.dropdown-item:active { outline: none; box-shadow: none; }
+
+/* Ensure high-contrast readable fallback (user agent where backdrop-filter unsupported) */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .navbar-cola { background: rgba(255, 255, 255, 0.12); color: var(--text); }
+  .popover, .dropdown-menu, #confirmLogoutModal .modal-content { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+}
+
+/* ---------------- Responsive ---------------- */
+@media (max-width: 920px) {
+  .navbar-cola { padding: 8px 12px; gap: 8px; height: 56px; }
+  .nav-links { display: none; } /* esconder links para mobile (implementar hambúrguer se quiser) */
+  .brand-left img { height: 30px; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .btnNav, .btn-profile, #btnMenu, .popover, .dropdown-menu { transition: none !important; animation: none !important; }
 }

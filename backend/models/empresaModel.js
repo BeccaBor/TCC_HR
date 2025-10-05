@@ -49,17 +49,37 @@ const empresaModel = {
   },
 
   // Cria gestor vinculado à empresa
-  async criarGestor({ empresaId, numeroRegistro, nome, cnpj, senhaHash }) {
-    if (!empresaId || !numeroRegistro || !nome || !cnpj || !senhaHash) {
+  async criarGestor({ 
+    empresaId, 
+    numeroRegistro, 
+    nome, 
+    cnpj, 
+    senhaHash, 
+    cargo, 
+    setor, 
+    tipo_jornada, 
+    horas_diarias 
+  }) {
+    if (!empresaId || !numeroRegistro || !nome || !cnpj || !senhaHash || !tipo_jornada || !horas_diarias) {
       throw new Error('Parâmetros inválidos para criar gestor');
     }
     try {
       const query = `
         INSERT INTO usuario
-          (empresa_id, numero_registro, nome, cnpj, senha_hash, tipo_usuario)
-        VALUES (?, ?, ?, ?, ?, 'gestor')
+          (empresa_id, numero_registro, nome, cnpj, senha_hash, tipo_usuario, cargo, setor, tipo_jornada, horas_diarias)
+        VALUES (?, ?, ?, ?, ?, 'gestor', ?, ?, ?, ?)
       `;
-      const [result] = await db.query(query, [empresaId, numeroRegistro, nome, cnpj, senhaHash]);
+      const [result] = await db.query(query, [
+        empresaId, 
+        numeroRegistro, 
+        nome, 
+        cnpj, 
+        senhaHash, 
+        cargo, 
+        setor, 
+        tipo_jornada, 
+        horas_diarias
+      ]);
       return result;
     } catch (err) {
       console.error('Erro em empresaModel.criarGestor:', err);

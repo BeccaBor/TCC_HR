@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{{!-- <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -9,28 +9,15 @@
 
 ...
 </head>
-<body>
-  <div class="cola-layout">   <!-- antes era class="container" -->
-    <aside class="sidebar">
-      <h3>Categorias Pessoais</h3>
-      <ul>
-        <li><a href="/colaborador/dados">Meus dados</a></li>
-        <li><a href="/colaborador/holerites">Holerites</a></li>
-      </ul>
+<aside class="sidebar">
+  <h3>Menu</h3>
+  <ul class="sidebar-list">
+    <li><a href="/colaborador/dados" class="{{#ifActive '/colaborador/dados'}}active{{/ifActive}}">Meus dados</a></li>
+    <li><a href="/colaborador/holerites" class="{{#ifActive '/colaborador/holerites'}}active{{/ifActive}}">Holerites</a></li>
+    <li><a href="/colaborador/documentacao" class="{{#ifActive '/colaborador/documentacao'}}active{{/ifActive}}">Documentação</a></li>
+    <li><a href="/colaborador/solicitacoes" class="{{#ifActive '/colaborador/solicitacoes'}}active{{/ifActive}}">Solicitações</a></li>
+  </ul>
+</aside>
 
-      <h3>Ações rápidas</h3>
-      <ul>
-        <li>🔍 Procurar</li>
-        <li>⬇️ Recentes Download</li>
-        <li>🗑️ Arquivados</li>
-      </ul>
-    </aside>
 
-    <main class="content">
-      {{{body}}}
-    </main>
-  </div>
-  <div class="cola-layout has-navbar">.
-</body>
-
-</html>
+</html> --}}

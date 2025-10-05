@@ -30,7 +30,7 @@
 </div>
 
 <!-- Popup -->
-<div id="overlay" style="display:none;">
+<div id="overlay">
   <div id="popup">
     <span class="close-btn" onclick="fecharPopup()">&times;</span>
     <h3 id="popupTitle"></h3>
@@ -39,128 +39,261 @@
 </div>
 
 <script>
-const overlay = document.getElementById("overlay");
-const popupTitle = document.getElementById("popupTitle");
-const popupForm = document.getElementById("popupForm");
+  const overlay = document.getElementById("overlay");
+  const popupTitle = document.getElementById("popupTitle");
+  const popupForm = document.getElementById("popupForm");
 
-// Backend URL seguro
-const BACKEND_URL = "{{BACKEND_URL}}" || "http://localhost:3001";
+  // BACKEND_URL é injetado via template; fallback para localhost:3001
+  const BACKEND_URL = "{{BACKEND_URL}}" && "{{BACKEND_URL}}" !== "" ? "{{BACKEND_URL}}" : "http://localhost:3001";
 
-// Abrir popup
-function abrirPopup(tipo) {
-  overlay.style.display = "flex";
-  popupTitle.textContent = "";
-  popupForm.innerHTML = "";
-
-  const tipoLower = tipo.toLowerCase();
-
-  if (tipoLower === "gestor" || tipoLower === "colaborador") {
-    popupTitle.textContent = `Login ${tipoLower === "gestor" ? "Gestor" : "Colaborador"}`;
-    popupForm.innerHTML = `
-      <input id="cnpj" type="text" placeholder="CNPJ" required>
-      <input id="registro" type="text" placeholder="Número de registro" required>
-      <input id="senha" type="password" placeholder="Senha" required>
-      <button type="submit">Entrar</button>
-    `;
-
-    popupForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const cnpj = document.getElementById("cnpj").value.trim();
-      const registro = document.getElementById("registro").value.trim();
-      const senha = document.getElementById("senha").value.trim();
-
-      if (!cnpj || !registro || !senha) {
-        alert("Todos os campos são obrigatórios!");
-        return;
-      }
-
-      const sucesso = await loginUsuario(cnpj, registro, senha);
-      if (sucesso) fecharPopup();
-    };
-
-  } else if (tipoLower === "empresa") {
-    popupTitle.textContent = "Cadastro de Empresa";
-    popupForm.innerHTML = `
-      <input id="nomeEmpresa" type="text" placeholder="Nome da empresa" required>
-      <input id="cnpjEmpresa" type="text" placeholder="CNPJ" required>
-      <input id="senhaEmpresa" type="password" placeholder="Senha" required>
-      <button type="submit">Cadastrar</button>
-    `;
-
-    popupForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const nomeEmpresa = document.getElementById("nomeEmpresa").value.trim();
-      const cnpj = document.getElementById("cnpjEmpresa").value.trim();
-      const senha = document.getElementById("senhaEmpresa").value.trim();
-
-      if (!nomeEmpresa || !cnpj || !senha) {
-        alert("Todos os campos são obrigatórios!");
-        return;
-      }
-
-      try {
-        const res = await fetch(`${BACKEND_URL}/api/auth/registerEmpresa`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nomeEmpresa, cnpj, senha })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-          alert(`Empresa cadastrada com sucesso!\nRegistro do gestor: ${data.registroGestor}`);
-          fecharPopup();
-        } else {
-          alert(data.message || data.erro || "Erro interno no servidor ou rota incorreta.");
-        }
-      } catch (err) {
-        console.error("Erro na requisição:", err);
-        alert("Erro de conexão com o servidor");
-      }
-    };
+  function fecharPopup() {
+    overlay.style.display = "none";
   }
-}
 
-// Fechar popup
-function fecharPopup() {
-  overlay.style.display = "none";
-}
+  // Faz login; 'tipo' = 'gestor' ou 'colaborador'
+  async function loginUsuario(tipo, cnpj, registro, senha) {
+    try {
+      let endpoint = `${BACKEND_URL}/api/auth/login`;
+      const body = {};
 
-// Função de login genérica
-async function loginUsuario(cnpj, registro, senha) {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cnpj, registro, senha })
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      localStorage.setItem("token", data.token);
-
-      // Redirecionamento baseado no tipo real do usuário
-      const tipoUsuario = data.usuario.tipo_usuario.toLowerCase();
-      if (tipoUsuario === "gestor") {
-        window.location.href = "/gestor/documentacao"; // <<<<< Redirecionamento corrigido
-      } else if (tipoUsuario === "colaborador") {
-        window.location.href = "/colaborador/holerites";
-      } else {
-        alert("Tipo de usuário desconhecido.");
+      if (String(tipo).toLowerCase() === 'colaborador') {
+        endpoint = `${BACKEND_URL}/api/colaborador/login`;
+        body.registro = registro;
+        body.senha = senha;
+        // O colaborador pode precisar do CNPJ se a empresa exigir, mas para o login de colaborador puro não é obrigatório no formulário
+        if (cnpj) body.cnpj = cnpj; 
+      } else { // Gestor
+        body.cnpj = cnpj;
+        body.registro = registro;
+        body.senha = senha;
       }
 
-      return true;
-    } else {
-      alert(data.erro || "Número de registro, CNPJ ou senha incorretos.");
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: 'include', // <--- critical: permite receber e armazenar cookie HttpOnly
+        body: JSON.stringify(body)
+      });
+
+      const data = await res.json();
+
+      if (res.ok && (data.token || (data.success && data.token))) {
+        const token = data.token;
+        // mantém token no localStorage (compat com APIs que usem Authorization header)
+        try { localStorage.setItem("token", token); } catch(e) { /* ignore */ }
+
+        const tipoUsuario = (data.usuario?.tipo_usuario || tipo || "").toLowerCase();
+        if (tipoUsuario === "gestor" || String(tipo).toLowerCase() === "gestor") {
+          // redireciona para rota do gestor (frontend)
+          window.location.href = "/gestor/documentacao";
+        } else {
+          // colaborador
+          window.location.href = "/colaborador/holerites";
+        }
+        return true;
+      } else {
+        // Usando console.error para não usar alert() aqui, mas mantive o alert para o usuário ver a mensagem.
+        console.error("Erro de Login:", data.message || data.erro || "Número de registro/CNPJ ou senha incorretos.");
+        alert(data.message || data.erro || "Número de registro/CNPJ ou senha incorretos.");
+        return false;
+      }
+    } catch (err) {
+      console.error("Erro ao logar:", err);
+      alert("Erro de conexão com o servidor.");
       return false;
     }
-  } catch (err) {
-    console.error("Erro na requisição:", err);
-    alert("Erro de conexão com o servidor.");
-    return false;
   }
-}
-</script>
-<script src="/js/verificarLogin.js"></script>
 
+  function abrirPopup(tipo) {
+    overlay.style.display = "flex";
+    popupTitle.textContent = "";
+    popupForm.innerHTML = "";
+
+    const tipoLower = tipo.toLowerCase();
+
+    // Função de filtro para permitir APENAS números e restringir o tamanho no campo CNPJ/CPF
+    function formatarApenasNumeros(event) {
+        const input = event.target;
+        // Remove qualquer caractere que não seja dígito (0-9)
+        input.value = input.value.replace(/[^0-9]/g, '');
+        // Restringe ao máximo de 14 dígitos (para CNPJ)
+        if (input.id === 'cnpj' || input.id === 'cnpjEmpresa') {
+            input.value = input.value.slice(0, 14);
+        }
+        // Se fosse CPF, seria slice(0, 11)
+    }
+
+    if (tipoLower === "gestor") {
+      popupTitle.textContent = `Login Gestor`;
+      popupForm.innerHTML = `
+        <input id="cnpj" type="text" placeholder="CNPJ" required oninput="formatarApenasNumeros(event)">
+        <input id="registro" type="text" placeholder="Número de registro" required>
+        <input id="senha" type="password" placeholder="Senha" required>
+        <button type="submit">Entrar</button>
+      `;
+      // Adiciona o evento de input após o DOM estar pronto
+      document.getElementById("cnpj").addEventListener('input', formatarApenasNumeros);
+
+
+      popupForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const cnpj = document.getElementById("cnpj").value.trim();
+        const registro = document.getElementById("registro").value.trim();
+        const senha = document.getElementById("senha").value.trim();
+        const btn = popupForm.querySelector("button[type='submit']");
+        
+        if (!cnpj || !registro || !senha) {
+          alert("Todos os campos são obrigatórios!");
+          return;
+        }
+
+        // Validação de tamanho para login do gestor
+        if (cnpj.length !== 14) {
+            alert("O CNPJ deve conter exatamente 14 dígitos.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Entrando...';
+        const sucesso = await loginUsuario('gestor', cnpj, registro, senha);
+        if (sucesso) fecharPopup();
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+      };
+
+    } else if (tipoLower === "colaborador") {
+      popupTitle.textContent = `Login Colaborador`;
+      popupForm.innerHTML = `
+        <input id="registro" type="text" placeholder="Número de registro" required>
+        <input id="senha" type="password" placeholder="Senha" required>
+        <button type="submit">Entrar</button>
+      `;
+
+      popupForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const registro = document.getElementById("registro").value.trim();
+        const senha = document.getElementById("senha").value.trim();
+        const btn = popupForm.querySelector("button[type='submit']");
+        if (!registro || !senha) {
+          alert("Todos os campos são obrigatórios!");
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = 'Entrando...';
+        // CNPJ vazio para login de colaborador
+        const sucesso = await loginUsuario('colaborador', '', registro, senha); 
+        if (sucesso) fecharPopup();
+        btn.disabled = false;
+        btn.textContent = 'Entrar';
+      };
+    } else if (tipoLower === "empresa") {
+      popupTitle.textContent = "Cadastro de Empresa";
+      popupForm.innerHTML = `
+        <input id="nomeEmpresa" type="text" placeholder="Nome da empresa" required>
+        <!-- CNPJ: Restrição de 14 dígitos e apenas números -->
+        <input id="cnpjEmpresa" type="text" placeholder="CNPJ" required oninput="formatarApenasNumeros(event)">
+        <input id="senhaEmpresa" type="password" placeholder="Senha da empresa" required>
+        <!-- CAMPO DE CONFIRMAÇÃO DE SENHA -->
+        <input id="confirmarSenhaEmpresa" type="password" placeholder="Confirmar Senha" required>
+        
+        <!-- ELEMENTO PARA EXIBIR A MENSAGEM DE ERRO DE SENHA CUSTOMIZADA -->
+        <p id="senhaMismatchError" style="color: #dc3545; font-size: 0.9em; margin-top: -10px; margin-bottom: 10px; display: none;">As senhas devem ser iguais.</p>
+
+        <hr>
+        <h4>Dados do Gestor</h4>
+        <input id="nomeGestor" type="text" placeholder="Nome do gestor" required>
+        <input id="cargoGestor" type="text" placeholder="Cargo do gestor" required>
+        <input id="setorGestor" type="text" placeholder="Setor do gestor" required>
+        <select id="tipoJornada" required>
+          <option value="" disabled selected>Selecione o tipo de jornada</option>
+          <option value="6x1">6x1</option>
+          <option value="5x2">5x2</option>
+          <option value="12x36">12x36</option>
+          <option value="flexível">Flexível</option>
+        </select>
+        <input id="horasDiarias" type="number" min="1" max="24" placeholder="Horas diárias" required>
+        <button type="submit">Cadastrar</button>
+      `;
+      document.getElementById("cnpjEmpresa").addEventListener('input', formatarApenasNumeros);
+
+
+      popupForm.onsubmit = async (e) => {
+        e.preventDefault();
+        const nomeEmpresa = document.getElementById("nomeEmpresa").value.trim();
+        const cnpj = document.getElementById("cnpjEmpresa").value.trim();
+        const senha = document.getElementById("senhaEmpresa").value.trim();
+        const confirmarSenha = document.getElementById("confirmarSenhaEmpresa").value.trim(); 
+        const nomeGestor = document.getElementById("nomeGestor").value.trim();
+        const cargo = document.getElementById("cargoGestor").value.trim();
+        const setor = document.getElementById("setorGestor").value.trim();
+        const tipo_jornada = document.getElementById("tipoJornada").value;
+        const horas_diarias = document.getElementById("horasDiarias").value;
+
+        // Referência ao novo elemento de erro
+        const erroElement = document.getElementById("senhaMismatchError");
+        
+        // VALIDAÇÃO DE CAMPOS OBRIGATÓRIOS (incluindo confirmarSenha)
+        if (!nomeEmpresa || !cnpj || !senha || !confirmarSenha || !nomeGestor || !cargo || !setor || !tipo_jornada || !horas_diarias) {
+          erroElement.style.display = 'none'; // Garante que a mensagem de senha esteja oculta
+          alert("Todos os campos são obrigatórios!");
+          return;
+        }
+        
+        // NOVO: VALIDAÇÃO SE AS SENHAS SÃO IGUAIS (e exibição da mensagem customizada)
+        if (senha !== confirmarSenha) {
+            erroElement.textContent = "A senha e a confirmação de senha não são idênticas!";
+            erroElement.style.display = 'block';
+            document.getElementById("senhaEmpresa").focus(); // Foca para o usuário corrigir
+            return;
+        } else {
+            // Se estiverem corretas, garante que a mensagem de erro está oculta para prosseguir
+            erroElement.style.display = 'none';
+        }
+
+        // Validação de tamanho no frontend (segunda camada)
+        if (cnpj.length !== 14 || !/^\d+$/.test(cnpj)) {
+            erroElement.style.display = 'none'; // Garante que a mensagem de senha esteja oculta
+            alert("O CNPJ deve conter exatamente 14 dígitos numéricos.");
+            return;
+        }
+
+
+        const btn = popupForm.querySelector("button[type='submit']");
+        btn.disabled = true;
+        btn.textContent = 'Cadastrando...';
+
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/auth/registerEmpresa`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: 'include',
+            // ENVIAMOS SOMENTE A SENHA ORIGINAL (A CONFIRMAÇÃO É APENAS PARA VERIFICAÇÃO LOCAL)
+            body: JSON.stringify({
+              nomeEmpresa,
+              cnpj,
+              senha, 
+              gestor: { nomeGestor, cargo, setor, tipo_jornada, horas_diarias }
+            })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            alert(`Empresa cadastrada com sucesso!\nRegistro do gestor: ${data.registroGestor || ''}`);
+            fecharPopup();
+          } else {
+            // Se falhar no backend, esconde o erro do frontend antes do alert
+            erroElement.style.display = 'none';
+            alert(data.message || data.erro || "Erro interno no servidor.");
+          }
+        } catch (err) {
+          erroElement.style.display = 'none';
+          alert("Erro de conexão com o servidor");
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Cadastrar';
+      };
+    }
+  }
+</script>
+
+<script src="/js/verificarLogin.js"></script>
