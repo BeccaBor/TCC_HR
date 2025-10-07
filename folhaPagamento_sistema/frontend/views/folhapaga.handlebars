@@ -1,0 +1,108 @@
+<link rel="stylesheet" href="../css/folhapaga.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+<div class="page-wrapper">
+  {{> navbar }}
+
+  <div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="text-white mb-2" style="font-size: 1.875rem; font-weight: 700;">Holerite - <span id="nome-colaborador">{{#if colaborador}}{{colaborador.nome}}{{else}}—{{/if}}</span></h1>
+        <p style="color: rgba(255,255,255,0.7);">{{#if colaborador}}{{colaborador.setor}} • {{colaborador.cargo}}{{/if}}</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="/gestor/folhadepagamento" class="glass-button"><i class="bi bi-arrow-left"></i> Voltar</a>
+        <button onclick="window.print()" class="glass-button"><i class="bi bi-printer"></i> Imprimir</button>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-8">
+        <div class="glass-card">
+          <h3 class="text-white" style="font-size:1.25rem;font-weight:700;margin-bottom:1rem;">Parâmetros</h3>
+          <form id="form-folha">
+            <input type="hidden" name="colaboradorId" value="{{#if colaborador}}{{colaborador.id}}{{/if}}">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label style="display:block;margin-bottom:0.4rem;color: rgba(255,255,255,0.8);">Salário</label>
+                <input name="salario" class="glass-input" type="number" step="0.01" value="{{#if colaborador}}{{colaborador.salario}}{{else}}0{{/if}}">
+              </div>
+              <div class="col-md-6">
+                <label style="display:block;margin-bottom:0.4rem;color: rgba(255,255,255,0.8);">Horas diárias</label>
+                <input name="horas_diarias" class="glass-input" type="number" step="1" value="8">
+              </div>
+              <div class="col-md-6">
+                <label style="display:block;margin-bottom:0.4rem;color: rgba(255,255,255,0.8);">Dependentes</label>
+                <input name="dependentes" class="glass-input" type="number" step="1" value="0">
+              </div>
+              <div class="col-md-6">
+                <label style="display:block;margin-bottom:0.4rem;color: rgba(255,255,255,0.8);">Horas extras</label>
+                <input name="horas_extras" class="glass-input" type="number" step="0.5" value="0">
+              </div>
+            </div>
+            <div class="d-flex gap-2" style="margin-top:1rem;">
+              <button type="button" class="glass-button-primary" id="btn-calcular"><i class="bi bi-calculator"></i> Calcular</button>
+              <button type="button" class="glass-button" id="btn-salvar"><i class="bi bi-save"></i> Salvar</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="glass-card" style="margin-top:1rem;">
+          <h3 class="text-white" style="font-size:1.25rem;font-weight:700;margin-bottom:1rem;">Resultado</h3>
+          <div class="table-responsive">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th>Descrição</th>
+                  <th class="text-end">Valor</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Salário Base</td>
+                  <td class="text-end" id="r-salario">{{#if colaborador}}R$ {{colaborador.salario}}{{else}}R$ 0,00{{/if}}</td>
+                </tr>
+                <tr>
+                  <td>INSS</td>
+                  <td class="text-end" id="r-inss">R$ 0,00</td>
+                </tr>
+                <tr>
+                  <td>IRRF</td>
+                  <td class="text-end" id="r-irrf">R$ 0,00</td>
+                </tr>
+                <tr>
+                  <td>FGTS</td>
+                  <td class="text-end" id="r-fgts">R$ 0,00</td>
+                </tr>
+                <tr>
+                  <td>Líquido</td>
+                  <td class="text-end" id="r-liquido">R$ 0,00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="glass-card">
+          <h3 class="text-white" style="font-size:1.25rem;font-weight:700;margin-bottom:1rem;">Colaborador</h3>
+          {{#if colaborador}}
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="employee-avatar" style="font-size:1.25rem;width:48px;height:48px;">{{#if colaborador.nome}}{{#each (split colaborador.nome ' ')}}{{#if @first}}{{uppercase (firstChar this)}}{{/if}}{{/each}}{{/if}}</div>
+            <div>
+              <div style="font-weight:600">{{colaborador.nome}}</div>
+              <div style="color: rgba(255,255,255,0.7);font-size:0.9rem">{{colaborador.cargo}}</div>
+              <div style="color: rgba(255,255,255,0.7);font-size:0.9rem">Setor: {{colaborador.setor}}</div>
+            </div>
+          </div>
+          {{else}}
+          <div style="color: rgba(255,255,255,0.7);">Colaborador não informado.</div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/public/js/folhapaga.js"></script>

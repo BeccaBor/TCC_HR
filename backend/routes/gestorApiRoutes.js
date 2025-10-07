@@ -61,3 +61,72 @@ router.post('/calcular', async (req, res) => {
 });
 
 module.exports = router;
+// --- Rotas adicionais para compatibilidade com folhapaga.js ---
+
+// GET /api/gestor/colaborador/:id
+router.get('/colaborador/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [rows] = await db.query(
+      'SELECT id, nome, cargo, salario, setor, foto FROM usuario WHERE id = ? AND tipo_usuario = ? LIMIT 1',
+      [id, 'colaborador']
+    );
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, message: 'Colaborador não encontrado' });
+    }
+    const c = rows[0];
+    // Campos opcionais esperados pelo front (fallbacks handled no front)
+    return res.json({
+      id: c.id,
+      nome: c.nome,
+      cargo: c.cargo,
+      salario: c.salario,
+      setor: c.setor,
+      foto: c.foto
+    });
+  } catch (err) {
+    console.error('ERR GET /api/gestor/colaborador/:id', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/gestor/colaborador/:id/calcular
+router.post('/colaborador/:id/calcular', async (req, res) => {
+  try {
+    const salario = Number(req.body.salario || 0);
+    const horasExtras = Number(req.body.horas_extras || 0);
+    const valorHoraBase = salario / 220; // base simplificada
+    const valorHorasExtras = horasExtras * (valorHoraBase * 1.5);
+    const salarioBase = +(salario + valorHorasExtras).toFixed(2);
+
+    const totalINSS = +(salarioBase * 0.08).toFixed(2);
+    const totalIRRF = +(salarioBase * 0.075).toFixed(2);
+    const totalFGTS = +(salarioBase * 0.08).toFixed(2);
+    const totalLiquido = +(salarioBase - totalINSS - totalIRRF).toFixed(2);
+
+    return res.json({
+      salarioBase,
+      totalINSS,
+      totalIRRF,
+      totalFGTS,
+      totalLiquido
+    });
+  } catch (err) {
+    console.error('ERR POST /api/gestor/colaborador/:id/calcular', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/gestor/colaborador/:id/update
+router.post('/colaborador/:id/update', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const salario = Number(req.body.salario || 0);
+    // Atualiza apenas salário para evitar dependência de colunas não existentes
+    const [result] = await db.query('UPDATE usuario SET salario = ? WHERE id = ?', [salario, id]);
+    return res.json({ success: true, affectedRows: result.affectedRows || 0 });
+  } catch (err) {
+    console.error('ERR POST /api/gestor/colaborador/:id/update', err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});

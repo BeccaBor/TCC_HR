@@ -30,4 +30,17 @@ router.get('/folhapaga', async (req, res) => {
   }
 });
 
+// Rota alternativa por path param: /gestor/folhapaga/:usuarioId
+router.get('/folhapaga/:usuarioId', async (req, res) => {
+  try {
+    const usuarioId = req.params.usuarioId;
+    const [rows] = await db.query('SELECT id, nome, cargo, salario, setor, foto FROM usuario WHERE id = ?', [usuarioId]);
+    const colaborador = rows && rows[0] ? rows[0] : null;
+    res.render('folhapaga', { colaborador });
+  } catch (err) {
+    console.error('ERR GET /gestor/folhapaga/:usuarioId', err);
+    res.status(500).send('Erro ao abrir folha do colaborador');
+  }
+});
+
 module.exports = router;
