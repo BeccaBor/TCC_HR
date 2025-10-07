@@ -6,14 +6,24 @@ const db = require('../config/db'); // usa a pool/connection que já existe
 // GET /api/gestor/colaboradores
 router.get('/colaboradores', async (req, res) => {
   try {
-    // opcional: filtro por setor via query ?setor=Nome
+    // opcionais: ?setor=Nome & ?empresa_id=ID
     const filtroSetor = req.query.setor;
-    let sql = 'SELECT id, nome, cargo, salario, setor, foto, tipo_usuario FROM usuario WHERE tipo_usuario = ?';
-    let params = ['colaborador'];
+    const empresaId = req.query.empresa_id ? Number(req.query.empresa_id) : null;
+
+    let sql = 'SELECT id, nome, cargo, salario, setor, foto, tipo_usuario, empresa_id FROM usuario WHERE tipo_usuario = ?';
+    const params = ['colaborador'];
+
+    if (empresaId) {
+      sql += ' AND empresa_id = ?';
+      params.push(empresaId);
+    }
     if (filtroSetor && filtroSetor !== 'Todos') {
       sql += ' AND setor = ?';
       params.push(filtroSetor);
     }
+
+    sql += ' ORDER BY nome';
+
     const [rows] = await db.query(sql, params);
     return res.json({ success: true, colaboradores: rows });
   } catch (err) {
@@ -25,10 +35,18 @@ router.get('/colaboradores', async (req, res) => {
 // GET /api/gestor/setores
 router.get('/setores', async (req, res) => {
   try {
-    const [rows] = await db.query('SELECT id, nome_setor FROM setores ORDER BY nome_setor');
-    // adiciona opção "Todos"
-    const setores = [{ id: 0, nome_setor: 'Todos' }, ...rows];
-    return res.json({ success: true, setores });
+    const empresaId = req.query.empresa_id ? Number(req.query.empresa_id) : null;
+    let sql = 'SELECT MIN(id) AS id, nome_setor FROM setores';
+    const params = [];
+    if (empresaId) {
+      sql += ' WHERE empresa_id = ?';
+      params.push(empresaId);
+    }
+    sql += ' GROUP BY nome_setor HAVING nome_setor IS NOT NULL AND nome_setor <> "" AND nome_setor <> "Todos" ORDER BY nome_setor';
+
+    const [rows] = await db.query(sql, params);
+    // não incluir "Todos" aqui para evitar duplicidade, o front já insere
+    return res.json({ success: true, setores: rows });
   } catch (err) {
     console.error('ERR /api/gestor/setores', err);
     return res.status(500).json({ success: false, error: err.message });
