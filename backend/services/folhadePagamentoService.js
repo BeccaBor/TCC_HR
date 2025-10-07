@@ -1,9 +1,106 @@
 // backend/services/folhadePagamentoService.js
 
 /**
- * Calcula o desconto de INSS baseado nas faixas de salário
- * @param {number} salarioBruto
- * @returns {number} desconto INSS
+ * Calcula horas trabalhadas a partir dos registros de ponto do mês
+ * @param {Array} registros - Array de registros do ponto no formato {data_hora_registro, tipo_registro}
+ * @param {number} horasDiariasEsperadas - Horas esperadas por dia
+ * @returns {Object} {totalHoras, faltas, detalhesPorDia, horasFaltadas}
+ */
+function calcularHorasTrabalhadas(registros, horasDiariasEsperadas = 8) {
+  // Agrupar por dia
+  const porDia = {};
+  
+  registros.forEach(reg => {
+    const data = new Date(reg.data_hora_registro);
+    const dia = data.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    if (!porDia[dia]) {
+      porDia[dia] = [];
+    }
+    porDia[dia].push({
+      hora: data,
+      tipo: reg.tipo_registro,
+      horas: reg.horas || 0
+    });
+  });
+
+  let totalMinutos = 0;
+  const faltas = [];
+  const detalhesPorDia = {};
+
+  // Processar cada dia
+  Object.keys(porDia).forEach(dia => {
+    const registrosDia = porDia[dia].sort((a, b) => a.hora - b.hora);
+    let minutosTrabalhadosDia = 0;
+    
+    // Parear entradas e saídas
+    let entrada = null;
+    let intervaloInicio = null;
+    
+    registrosDia.forEach(reg => {
+      if (reg.tipo === 'entrada' && !entrada) {
+        entrada = reg.hora;
+      } else if (reg.tipo === 'inicio_intervalo' && entrada) {
+        intervaloInicio = reg.hora;
+      } else if (reg.tipo === 'fim_intervalo') {
+        intervaloInicio = null; // Retorna do intervalo
+      } else if (reg.tipo === 'saida' && entrada) {
+        const diff = (reg.hora - entrada) / 1000 / 60; // minutos
+        minutosTrabalhadosDia += diff;
+        entrada = null;
+      }
+    });
+
+    detalhesPorDia[dia] = {
+      horasTrabalhadas: minutosTrabalhadosDia / 60,
+      horasEsperadas: horasDiariasEsperadas,
+      diferenca: (minutosTrabalhadosDia / 60) - horasDiariasEsperadas
+    };
+
+    if (minutosTrabalhadosDia === 0) {
+      faltas.push(dia);
+    }
+
+    totalMinutos += minutosTrabalhadosDia;
+  });
+
+  const totalHoras = totalMinutos / 60;
+  
+  return {
+    totalHoras: Number(totalHoras.toFixed(2)),
+    faltas,
+    detalhesPorDia,
+    horasFaltadas: faltas.length * horasDiariasEsperadas
+  };
+}
+
+/**
+ * Calcula dias úteis no mês (segunda a sexta, exceto feriados)
+ * @param {number} ano
+ * @param {number} mes - 1-12
+ * @param {Array} feriados - Array de datas de feriados ['YYYY-MM-DD']
+ * @returns {number}
+ */
+function calcularDiasUteis(ano, mes, feriados = []) {
+  const primeiroDia = new Date(ano, mes - 1, 1);
+  const ultimoDia = new Date(ano, mes, 0);
+  let diasUteis = 0;
+
+  for (let dia = primeiroDia; dia <= ultimoDia; dia.setDate(dia.getDate() + 1)) {
+    const diaSemana = dia.getDay();
+    const dataStr = dia.toISOString().split('T')[0];
+    
+    // Segunda (1) a Sexta (5), não é feriado
+    if (diaSemana >= 1 && diaSemana <= 5 && !feriados.includes(dataStr)) {
+      diasUteis++;
+    }
+  }
+
+  return diasUteis;
+}
+
+/**
+ * Calcula INSS baseado nas faixas progressivas
  */
 function calcularINSS(salarioBruto) {
   salarioBruto = Number(salarioBruto) || 0;
@@ -32,10 +129,7 @@ function calcularINSS(salarioBruto) {
 }
 
 /**
- * Calcula o IRRF (Imposto de Renda Retido na Fonte)
- * @param {number} salarioBase
- * @param {number} dependentes
- * @returns {number} valor do IRRF
+ * Calcula IRRF
  */
 function calcularIRRF(salarioBase, dependentes = 0) {
   salarioBase = Number(salarioBase) || 0;
@@ -68,9 +162,7 @@ function calcularIRRF(salarioBase, dependentes = 0) {
 }
 
 /**
- * Calcula o FGTS (8% do salário bruto)
- * @param {number} salarioBruto
- * @returns {number} valor do FGTS
+ * Calcula FGTS (8% do salário bruto)
  */
 function calcularFGTS(salarioBruto) {
   salarioBruto = Number(salarioBruto) || 0;
@@ -78,64 +170,116 @@ function calcularFGTS(salarioBruto) {
 }
 
 /**
- * Calcula a folha de pagamento de um funcionário
- * @param {object} param0 
- * @param {number} param0.salarioBruto
- * @param {number} param0.dependentes
- * @param {number} param0.descontosFixos
- * @param {number} param0.outrasRetencoes
- * @returns {object} detalhes da folha
+ * Calcula folha de um funcionário específico
+ * @param {Object} params
+ * @param {number} params.salarioBruto
+ * @param {number} params.dependentes
+ * @param {number} params.horasFaltadas
+ * @param {number} params.horasEsperadas
+ * @param {Array} params.beneficios
+ * @returns {Object} Detalhes da folha
  */
-function calcularFolhaFuncionario({ salarioBruto, dependentes = 0, descontosFixos = 0, outrasRetencoes = 0 }) {
+function calcularFolhaFuncionario({
+  salarioBruto,
+  dependentes = 0,
+  horasFaltadas = 0,
+  horasEsperadas = 176, // ~22 dias * 8h
+  beneficios = []
+}) {
   salarioBruto = Number(salarioBruto) || 0;
-  descontosFixos = Number(descontosFixos) || 0;
-  outrasRetencoes = Number(outrasRetencoes) || 0;
-
-  const inss = calcularINSS(salarioBruto);
-  const baseIR = salarioBruto - inss - descontosFixos;
+  
+  // Calcular valor da hora
+  const valorHora = horasEsperadas > 0 ? salarioBruto / horasEsperadas : 0;
+  
+  // Desconto por faltas
+  const descontoPorFaltas = horasFaltadas * valorHora;
+  
+  // Salário após descontos de falta
+  const salarioAposDescontoFaltas = salarioBruto - descontoPorFaltas;
+  
+  // Calcular impostos
+  const inss = calcularINSS(salarioAposDescontoFaltas);
+  const baseIR = salarioAposDescontoFaltas - inss;
   const irrf = calcularIRRF(baseIR, dependentes);
-  const fgts = calcularFGTS(salarioBruto);
-
-  const totalDescontos = Number((inss + irrf + descontosFixos + outrasRetencoes).toFixed(2));
-  const salarioLiquido = Number((salarioBruto - totalDescontos).toFixed(2));
-
+  const fgts = calcularFGTS(salarioAposDescontoFaltas);
+  
+  // Somar benefícios
+  let totalBeneficios = 0;
+  beneficios.forEach(b => {
+    const valor = Number(b.valor_personalizado || b.valor_aplicado || 0);
+    totalBeneficios += valor;
+  });
+  
+  // Total de descontos
+  const totalDescontos = inss + irrf + descontoPorFaltas;
+  
+  // Salário líquido
+  const salarioLiquido = salarioBruto - totalDescontos + totalBeneficios;
+  
   return {
     salarioBruto: Number(salarioBruto.toFixed(2)),
+    valorHora: Number(valorHora.toFixed(2)),
+    horasFaltadas: Number(horasFaltadas.toFixed(2)),
+    descontoPorFaltas: Number(descontoPorFaltas.toFixed(2)),
     totalINSS: inss,
     totalIRRF: irrf,
     totalFGTS: fgts,
-    totalDescontos,
-    salarioLiquido
+    totalBeneficios: Number(totalBeneficios.toFixed(2)),
+    totalDescontos: Number(totalDescontos.toFixed(2)),
+    salarioLiquido: Number(salarioLiquido.toFixed(2)),
+    beneficios
   };
 }
 
 /**
- * Calcula a folha completa de todos os funcionários
- * @param {Array} funcionarios
- * @returns {object} resumo da folha
+ * Calcula folha completa de todos os funcionários
  */
 function calcularFolhaCompleta(funcionarios) {
-  let totalBruto = 0, totalINSS = 0, totalIRRF = 0, totalFGTS = 0, totalLiquido = 0;
-
-  funcionarios.forEach(f => {
-    const res = calcularFolhaFuncionario(f);
-    totalBruto += res.salarioBruto;
-    totalINSS += res.totalINSS;
-    totalIRRF += res.totalIRRF;
-    totalFGTS += res.totalFGTS;
-    totalLiquido += res.salarioLiquido;
+  let totalBruto = 0;
+  let totalINSS = 0;
+  let totalIRRF = 0;
+  let totalFGTS = 0;
+  let totalLiquido = 0;
+  let totalDescontos = 0;
+  
+  const detalhesFuncionarios = funcionarios.map(f => {
+    const resultado = calcularFolhaFuncionario({
+      salarioBruto: f.salario || f.salarioBruto || 0,
+      dependentes: f.dependentes || 0,
+      horasFaltadas: f.horasFaltadas || 0,
+      horasEsperadas: f.horasEsperadas || 176,
+      beneficios: f.beneficios || []
+    });
+    
+    totalBruto += resultado.salarioBruto;
+    totalINSS += resultado.totalINSS;
+    totalIRRF += resultado.totalIRRF;
+    totalFGTS += resultado.totalFGTS;
+    totalLiquido += resultado.salarioLiquido;
+    totalDescontos += resultado.totalDescontos;
+    
+    return {
+      ...f,
+      ...resultado
+    };
   });
 
   return {
-    totalBruto: Number(totalBruto.toFixed(2)),
-    totalINSS: Number(totalINSS.toFixed(2)),
-    totalIRRF: Number(totalIRRF.toFixed(2)),
-    totalFGTS: Number(totalFGTS.toFixed(2)),
-    totalLiquido: Number(totalLiquido.toFixed(2))
+    detalhesFuncionarios,
+    resumo: {
+      totalBruto: Number(totalBruto.toFixed(2)),
+      totalINSS: Number(totalINSS.toFixed(2)),
+      totalIRRF: Number(totalIRRF.toFixed(2)),
+      totalFGTS: Number(totalFGTS.toFixed(2)),
+      totalDescontos: Number(totalDescontos.toFixed(2)),
+      totalLiquido: Number(totalLiquido.toFixed(2))
+    }
   };
 }
 
 module.exports = {
+  calcularHorasTrabalhadas,
+  calcularDiasUteis,
   calcularINSS,
   calcularIRRF,
   calcularFGTS,

@@ -1,179 +1,59 @@
-{{#*inline "styles"}}
-<link rel="stylesheet" href="./css/folhadepag.css">
-{{/inline}}
+<link rel="stylesheet" href="../css/folhapaga.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
 <div class="page-wrapper">
-
-    {{> navbar }}
-
+  {{> navbar }}
+  <div class="cola-layout">
     <main class="p-4">
-        <div class="containerCont">
-        <h4>Controle de folha de pagamento</h4>
-        <p>Gere folhas mensais e calcule férias, 13º salário, INSS, FGTS e IRRF</p>
+      <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+          <h1 class="text-white mb-2">Folha de Pagamento - {{colaborador.nome}}</h1>
+          <p style="color: rgba(255,255,255,0.7);">Editar dados para cálculo</p>
         </div>
+      </div>
 
-        <div class="conFP container-fluid">
-            <!-- Cards resumo -->
-            <div class="row g-3 my-4">
-                <div class="col-md-4">
-                    <div class="cardfolha card text-left">
-                        <div class="card-body">
-                            <h6 class="card-subtitle text-muted">Funcionários Ativos</h6>
-                            <h4 class="card-title">{{funcionariosAtivos}}</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="cardfolha card text-left">
-                        <div class="card-body">
-                            {{!-- (data da folha atual, como disse, só a que foi selecionada ou que foi acabada de ser criada!) --}}
-                            <h6 class="card-subtitle text-muted">Folha Atual</h6> 
-                            <h4 class="card-title">{{folhaAtual}}</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="cardfolha card text-left">
-                        <div class="card-body">
-                            <h6 class="card-subtitle text-muted">Total da Folha</h6>
-                            <h4 class="card-title">{{totalFolha}}</h4>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Formulário + Folhas Recentes -->
-            <div class="row g-4">
-                <div class="col-md-6">
-                    <div class="cardform card">
-                        <div class="card-body">
-                            <h6 class="fw-bold mb-3">Gerar Nova Folha</h6>
-                            <form>
-                                <div class="mb-3">
-                                    <label>Mês/Ano</label>
-                                    <input type="date" class="form-control" placeholder="MM/AAAA">
-                                </div>
-                                <div class="mb-3">
-                                    <label>Tipo</label>
-                                    <select class="form-select">
-                                        <option>Tipos de folha</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label>Departamento</label>
-                                    <select class="form-select">
-                                        <option>Todos os Departamentos</option>
-                                    </select>
-                                </div>
-                                <div class="bg-light p-3 rounded mb-3">
-                                    <p class="mb-1">Cálculos Inclusos:</p>
-                                    <ul class="list-inline mb-0">
-                                        <div class="row justify-content-around">
-                                            <div class="col-4">
-                                                <li class="list-inline-item">INSS</li>
-                                            </div>
-                                            <div class="col-4">
-                                                <li class="list-inline-item">FGTS</li>
-                                            </div>
-                                        </div>
-                                        <div class="row justify-content-around">
-                                            <div class="col-4">
-                                                <li class="list-inline-item">IRRF</li>
-                                            </div>
-                                            <div class="col-4">
-                                                <li class="list-inline-item">Vale Transporte</li>
-                                            </div>
-                                        </div>
-                                    </ul>
-                                </div>
-                                <button type="submit" class="btn w-100"
-                                    style="background-color:#4d446b; color:white; letter-spacing: 1px;"><strong>Gerar
-                                        Folha de Pagamento</strong></button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+      <div class="glass-card">
+        <form id="form-folha" method="post" action="/api/gestor/calcular">
+          <input type="hidden" name="usuarioId" value="{{colaborador.id}}">
+          <div class="mb-3">
+            <label>Salário Bruto</label>
+            <input name="salarioBruto" type="number" step="0.01" class="glass-input" value="{{colaborador.salario}}">
+          </div>
 
-                <div class="col-md-6">
-                    <div class="cardfolha2 card">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                {{!-- isso é as folhas que foram criadas, recentes são no max 3, ou seja, 3 em 3 meses. Se não tiver nenhuma, exibir "nenhuma folha" --}}
-                                <h6 class="fw-bold">Folhas Recentes</h6>
-                                {{!-- aparece pop-up de folhas de qualquer data --}}
-                                <a href="#">Ver todas</a>
-                            </div>
-                            <ul class="listgroup">
-                                {{#each folhasRecentes}}
-                                <li class="listgroupItem d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center">
-                                        <i class="bi {{this.icone}} fs-4 me-3"></i>
-                                        <div>
-                                            <div>{{this.data}}</div>
-                                            <small class="text-muted">{{this.tipo}}</small>
-                                        </div>
-                                    </div>
-                                    <div class="text-end">
-                                        <div>{{this.valor}}</div>
-                                        <span
-                                            class="badge {{#ifCond this.status '==' 'Processada'}}bg-success{{else}}bg-warning text-dark{{/ifCond}}"
-                                            style=" background-color: rgb(255, 255, 255);box-shadow: 3px 3px 3px rgba(50, 50, 77, 0.329);">
-                                            {{this.status}}
-                                        </span>
+          <!-- adicione aqui outros campos que queira (horas extras, descontos, VT etc.) -->
+          <div class="d-grid mt-3">
+            <button type="submit" class="glass-button-primary">Calcular Folha</button>
+          </div>
+        </form>
 
-                                    </div>
-                                </li>
-                                        <hr>
-                                {{/each}}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Detalhamento da folha atual (só aparece dps que uma folha é selecionada ou acabado de cria-la) caso de sem folha, mostrar "nenhuma folha selecionada" -->
-            <div class="row g-3 my-4">
-
-                <div class="carddetalha card my-4">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3" style="color:#51447C;">Detalhamento da Folha Atual</h6>
-                        <p style="color:#51447c70;">Breakdown dos cálculos e descontos</p>
-                        <div class="row text-center">
-                            <div class="col-md-3">
-                                <div
-                                    style="background-color: #BABBE1; border-radius: 50%; padding: 10px; display: inline-flex;align-items: center; justify-content: center; height:47px; width:48px">
-                                    <i class="bi bi-wallet2 fs-4" style="color:#51447C;"></i>
-                                </div>
-                                <p>Salário Bruto<br><strong style="color:#51447C;">R$ 000.000</strong></p>
-                            </div>
-                            <div class="col-md-3">
-                                <div
-                                    style="background-color: #BABBE1; border-radius: 50%; padding: 10px; display: inline-flex;align-items: center; justify-content: center; height:47px; width:48px">
-                                    <i class="bi bi-shield-lock fs-4" style="color:#51447C;"></i>
-                                </div>
-                                <p>INSS<br><strong style="color:#51447C;">-R$ 000.000</strong></p>
-                            </div>
-                            <div class="col-md-3">
-                                <div
-                                    style="background-color: #BABBE1; border-radius: 50%; padding: 10px; display: inline-flex;align-items: center; justify-content: center; height:47px; width:48px">
-                                    <i class="bi bi-percent fs-4" style="color:#51447C;"></i>
-                                </div>
-                                <p>IRRF<br><strong style="color:#51447C;">-R$ 000.000</strong></p>
-                            </div>
-                            <div class="col-md-3">
-                                <div
-                                    style="background-color: #BABBE1; border-radius: 50%; padding: 10px; display: inline-flex;align-items: center; justify-content: center; height:47px; width:48px">
-                                    <i class="bi bi-bank fs-4" style="color:#51447C;"></i>
-                                </div>
-                                <p>FGTS<br><strong style="color:#51447C;">-R$ 000.000</strong></p>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="text-end mt-3">
-                            <h5 style="color:#51447C;">Total Líquido: <strong>R$ 000.000</strong></h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <div id="resultado" class="mt-4"></div>
+      </div>
     </main>
+  </div>
 </div>
+
+<script>
+  // intercepta submissão e mostra resultado sem recarregar (opcional)
+  document.getElementById('form-folha')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+    const payload = Object.fromEntries(data);
+    try {
+      const resp = await fetch('/api/gestor/calcular', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await resp.json();
+      if (json && json.success) {
+        document.getElementById('resultado').innerText = JSON.stringify(json.result, null, 2);
+      } else {
+        document.getElementById('resultado').innerText = 'Erro no cálculo';
+      }
+    } catch (err) {
+      console.error(err);
+      document.getElementById('resultado').innerText = 'Erro';
+    }
+  });
+</script>
