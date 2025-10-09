@@ -17,7 +17,7 @@ const setorController = {
       }
 
       const [result] = await db.query(
-        "INSERT INTO setores (empresa_id, nome, descricao) VALUES (?, ?, ?)",
+        "INSERT INTO setores (empresa_id, nome_setor, descricao) VALUES (?, ?, ?)",
         [empresa_id, nome, descricao || ""]
       );
 
@@ -50,7 +50,7 @@ const setorController = {
       }
 
       const [rows] = await db.query(
-        "SELECT * FROM setores WHERE empresa_id = ? ORDER BY nome",
+        "SELECT * FROM setores WHERE empresa_id = ? ORDER BY nome_setor",
         [empresa_id]
       );
 

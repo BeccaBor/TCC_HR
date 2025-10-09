@@ -1,181 +1,388 @@
-{{> navbar }}
+<link rel="stylesheet" href="../css/folhapaga.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 
-<main class="p-4">
-    <h2>Controle de folha de pagamento</h2>
-    <p>Gere folhas mensais e calcule férias, 13º salário, INSS, FGTS e IRRF</p>
+<div class="page-wrapper">
+  {{> navbar }}
+  
+  <div class="cola-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div>
+        <h3>Setores</h3>
+        <ul id="setores-list">
+          <li><a href="#" data-setor="Todos" class="sidebar-link sidebar-link-active"><i class="bi bi-people"></i> Todos</a></li>
+          <!-- Setores serão carregados via JS -->
+        </ul>
 
-    <div class="conFP container-fluid">
-        <div class="row g-3 my-4">
-            <div class="col-md-4">
-                <div class="card text-left">
-                    <div class="card-body">
-                        <h6 class="card-subtitle text-muted">Funcionários Ativos</h6>
-                        <h5 class="card-title">{{funcionariosAtivos}}</h5>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-left">
-                    <div class="card-body">
-                        <h4 class="card-subtitle text-muted">Folha Atual</h4>
-                        <h5 class="card-title">{{folhaAtual}}</h5>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-left">
-                    <div class="card-body">
-                        <h6 class="card-subtitle text-muted">Total da Folha</h6>
-                        <h5 class="card-title">{{totalFolha}}</h5>
-                    </div>
-                </div>
-            </div>
+        <h3 style="margin-top: 2rem;">Gestão</h3>
+        <ul>
+          <li><a href="#relatorios" class="sidebar-link sidebar-link-default"><i class="bi bi-graph-up"></i> Relatórios</a></li>
+          <li><a href="#beneficios" class="sidebar-link sidebar-link-default"><i class="bi bi-credit-card"></i> Benefícios</a></li>
+          <li><a href="#holerite" class="sidebar-link sidebar-link-default"><i class="bi bi-card-text"></i> Holerite</a></li>
+          <li><button id="btn-config" class="sidebar-link sidebar-link-default"><i class="bi bi-gear"></i> Configurações</button></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Conteúdo Principal -->
+    <main class="p-4">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+          <h1 class="text-white mb-2" style="font-size: 1.875rem; font-weight: 700;">Folha de Pagamento</h1>
+          <p style="color: rgba(255,255,255,0.7);">Gerencie salários, benefícios e relatórios da sua equipe</p>
         </div>
-        <div class="row g-4">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="fw-bold mb-3">Gerar Nova Folha</h6>
-                        <form>
-                            <div class="mb-3">
-                                <label>Mês/Ano</label>
-                                <input type="date" class="form-control" placeholder="MM/AAAA">
-                            </div>
-                            <div class="mb-3">
-                                <label for="tipoFolha">Selecione o tipo de folha</label>
-                                <select id="tipoFolha" class="form-select">
-                                    <option>Tipos de folha</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                 <label for="departamento">Selecione o departamento</label>
-                                <select id="departamento" class="form-select">
-                                    <option>Todos departamentos</option>
-                                </select>
-                            </div>
-                            <div class="bg-light p-3 rounded mb-3">
-                                <p class="mb-1">Cálculos Inclusos:</p>
-                                <ul class="list-inline mb-0">
-                                    <li class="col-4 list-inline-item">
-                                        <div class="row justify-content-around">
-                                            INSS
-                                        </div>
-                                    </li>
-                                    <li class="col-4 list-inline-item">
-                                        <div class="row justify-content-around">
-                                            FGTS
-                                        </div>
-                                    </li>
-                                    <li class="col-4 list-inline-item">
-                                        <div class="row justify-content-around">
-                                            IRRF
-                                        </div>
-                                    </li>
-                                    <li class="col-4 list-inline-item">
-                                        <div class="row justify-content-around">
-                                            Vale Transporte
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                            <button type="submit" class="btn btn-dark w-100">Gerar Folha de Pagamento</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
+        <div class="d-flex gap-3">
+          <button class="glass-button"><i class="bi bi-download"></i> Exportar</button>
+          <button class="glass-button-primary" onclick="window.location.href='/gestor/gerenciamento'">
+            <i class="bi bi-plus-lg"></i> Novo Funcionário
+          </button>
+        </div>
+      </div>
 
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold">Folhas Recentes</h6>
-                            <a href="#">Ver todas</a>
-                        </div>
-                        <ul class="list-group">
-                            {{#each folhasRecentes}}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <i class="bi {{this.icone}} fs-4 me-3"></i>
-                                    <div>
-                                        <div>{{this.data}}</div>
-                                        <small class="text-muted">{{this.tipo}}</small>
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    <div>{{this.valor}}</div>
-                                    <span
-                                        class="badge {{#ifCond this.status '==' 'Processada'}}bg-success{{else}}bg-warning text-dark{{/ifCond}}">
-                                        {{this.status}}
-                                    </span>
-
-                                </div>
-                            </li>
-                            {{/each}}
-                        </ul>
-                    </div>
-                </div>
+      <!-- Stats Cards -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="stat-icon gradient-blue-cyan"><i class="bi bi-people text-white"></i></div>
+              <span class="text-success" style="font-size: 0.875rem; font-weight: 500;" id="stat-percentual">--</span>
             </div>
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-bottom: 0.25rem;">Total Funcionários</p>
+            <h3 class="text-white" id="stat-total-func" style="font-size: 1.5rem; font-weight: 700;">0</h3>
+          </div>
         </div>
 
-        <div class="row g-3 my-4">
-
-            <div class="card my-4">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">Detalhamento da Folha Atual</h6>
-                    <p class="text-muted">Breakdown dos cálculos e descontos</p>
-
-                    <div class="row text-center">
-                        <div class="col-md-3">
-                            <i class="bi bi-wallet2 fs-4"></i>
-                            <p>Salário Bruto<br><strong>R$ {{resumoFolha.totalSalarioBruto}}</strong></p>
-                        </div>
-                        <div class="col-md-3">
-                            <i class="bi bi-shield-lock fs-4"></i>
-                            <p>INSS<br><strong>-R$ {{resumoFolha.totalINSS}}</strong></p>
-                        </div>
-                        <div class="col-md-3">
-                            <i class="bi bi-percent fs-4"></i>
-                            <p>IRRF<br><strong>-R$ {{resumoFolha.totalIRRF}}</strong></p>
-                        </div>
-                        <div class="col-md-3">
-                            <i class="bi bi-bank fs-4"></i>
-                            <p>FGTS<br><strong>-R$ {{resumoFolha.totalFGTS}}</strong></p>
-                        </div>
-                    </div>
-                    <hr>
-                    <div class="text-end mt-3">
-                        <h5>Total Líquido: <strong>R$ {{resumoFolha.totalLiquido}}</strong></h5>
-                    </div>
-                </div>
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="stat-icon gradient-green-emerald"><i class="bi bi-currency-dollar text-white"></i></div>
+              <span class="text-success" style="font-size: 0.875rem; font-weight: 500;">--</span>
             </div>
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-bottom: 0.25rem;">Folha Mensal</p>
+            <h3 class="text-white" id="stat-folha-mensal" style="font-size: 1.5rem; font-weight: 700;">R$ 0,00</h3>
+          </div>
         </div>
+
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="stat-icon gradient-purple-pink"><i class="bi bi-graph-up text-white"></i></div>
+              <span class="text-success" style="font-size: 0.875rem; font-weight: 500;">--</span>
+            </div>
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-bottom: 0.25rem;">Média Salarial</p>
+            <h3 class="text-white" id="stat-media-salarial" style="font-size: 1.5rem; font-weight: 700;">R$ 0,00</h3>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="stat-icon gradient-orange-red"><i class="bi bi-calendar text-white"></i></div>
+              <span style="color: rgba(255,255,255,0.7); font-size: 0.875rem; font-weight: 500;">Em breve</span>
+            </div>
+            <p style="color: rgba(255,255,255,0.7); font-size: 0.875rem; margin-bottom: 0.25rem;">Próximo Pagamento</p>
+            <h3 class="text-white" id="stat-proximo-pagamento" style="font-size: 1.5rem; font-weight: 700;">--</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabela de Funcionários -->
+      <div class="glass-card">
+        <div class="d-flex justify-content-between align-items-center mb-4 pb-3" style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+          <h2 class="text-white" style="font-size: 1.25rem; font-weight: 700;">Funcionários</h2>
+          <div class="d-flex gap-3">
+            <div class="position-relative">
+              <i class="bi bi-search position-absolute" style="left: 0.75rem; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.5);"></i>
+              <input type="text" class="glass-input" id="input-busca" placeholder="Buscar funcionários..." style="padding-left: 2.5rem; width: 250px;">
+            </div>
+            <button class="glass-button" style="padding: 0.5rem;"><i class="bi bi-funnel"></i></button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="glass-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Cargo</th>
+                <th>Setor</th>
+                <th>Salário</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="employees-tbody">
+             
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Popup Configurações de Pagamento -->
+<div id="overlay-config" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 9999; align-items: center; justify-content: center;">
+  <div id="popup-config" style="background: linear-gradient(135deg, rgba(30, 30, 45, 0.95), rgba(20, 20, 35, 0.95)); border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1);">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 style="margin: 0; color: #fff; font-weight: 600;">Configurações de Pagamento</h3>
+      <button id="fechar-config" style="background: none; border: none; color: rgba(255, 255, 255, 0.7); font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; transition: color 0.3s;">
+        <i class="bi bi-x-lg"></i>
+      </button>
     </div>
-</main>
-
-{{!-- <script>
-  document.addEventListener("DOMContentLoaded", ()=>{
-    const token= localStorage.getItem("token") || sessionStorage.getItem("token")
-
-    if (!token){
-      //barra a pessoa que não tiver o token, vai fazer a pessoa voltar a pagina do login
-      window.location.href= "/"
-      return
-    }
-
-    //vai testar o token eno servidor pra evitar de ser expirado 
-
-    fetch("http://localhost:3001/colaborador/dados", {
-      headers: {"Authorization": `Bearer $ {token}`}
-    }).then(res=> {
-      if(!res.ok){
-        localStorage.removeItem("token")
-        sessionStorage.removeItem("token")
-        window.locationhref = "/"
-      }
-    })
-    .catch(()=>{
+    
+    <form id="form-config">
+      <div class="mb-3">
+        <label style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin-bottom: 8px; display: block;">Tipo de pagamento</label>
+        <select name="tipo" class="glass-input" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; font-size: 14px;">
+          <option value="mensal">Mensal (1x no mês)</option>
+          <option value="quinzenal">Quinzenal (2x no mês)</option>
+        </select>
+      </div>
       
-      window.location.href = "/"
-    })
-  })
-</script> --}}
+      <div class="mb-3">
+        <label style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin-bottom: 8px; display: block;">Dia do pagamento 1</label>
+        <input type="number" name="dia1" class="glass-input" min="1" max="31" placeholder="Digite o dia (1-31)" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; font-size: 14px;">
+      </div>
+      
+      <div class="mb-3" id="campo-dia2" style="display: none;">
+        <label style="color: rgba(255, 255, 255, 0.9); font-size: 14px; margin-bottom: 8px; display: block;">Dia do pagamento 2</label>
+        <input type="number" name="dia2" class="glass-input" min="1" max="31" placeholder="Digite o dia (1-31)" style="width: 100%; padding: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: #fff; font-size: 14px;">
+      </div>
+      
+      <div class="d-flex justify-content-end gap-2" style="margin-top: 24px;">
+        <button type="button" class="glass-button" id="cancelar-config" style="padding: 10px 20px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; color: rgba(255, 255, 255, 0.7); cursor: pointer; transition: all 0.3s;">
+          Cancelar
+        </button>
+        <button type="submit" class="glass-button-primary" style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: #fff; cursor: pointer; font-weight: 600; transition: all 0.3s;">
+          Salvar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/folhaGestor.js"></script>
+
+<script>
+(function(){
+  // Elementos do DOM
+  const abrir = document.getElementById('btn-config'); // Botão "Configurações" na sidebar
+  const overlay = document.getElementById('overlay-config');
+  const popup = document.getElementById('popup-config');
+  const fecharBtn = document.getElementById('fechar-config');
+  const cancelar = document.getElementById('cancelar-config');
+  const form = document.getElementById('form-config');
+  const tipo = form ? form.querySelector('select[name="tipo"]') : null;
+  const campoDia2 = document.getElementById('campo-dia2');
+
+  // Funções de abrir/fechar
+  function abrirModal(){ 
+    if (overlay) {
+      overlay.style.display = 'flex';
+      // Pequena animação
+      popup.style.transform = 'scale(0.9)';
+      popup.style.opacity = '0';
+      setTimeout(() => {
+        popup.style.transition = 'all 0.3s ease';
+        popup.style.transform = 'scale(1)';
+        popup.style.opacity = '1';
+      }, 10);
+    }
+  }
+  
+  function fecharModal(){ 
+    if (overlay) {
+      popup.style.transform = 'scale(0.9)';
+      popup.style.opacity = '0';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+      }, 300);
+    }
+  }
+
+  // Event listeners
+  if (abrir) abrir.addEventListener('click', (e) => {
+    e.preventDefault();
+    abrirModal();
+  });
+  
+  if (fecharBtn) fecharBtn.addEventListener('click', fecharModal);
+  if (cancelar) cancelar.addEventListener('click', fecharModal);
+  
+  // Fechar ao clicar fora do popup
+  if (overlay) {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) fecharModal();
+    });
+  }
+  
+  // Hover effects
+  if (fecharBtn) {
+    fecharBtn.addEventListener('mouseenter', () => {
+      fecharBtn.style.color = '#fff';
+      fecharBtn.style.transform = 'rotate(90deg)';
+    });
+    fecharBtn.addEventListener('mouseleave', () => {
+      fecharBtn.style.color = 'rgba(255, 255, 255, 0.7)';
+      fecharBtn.style.transform = 'rotate(0deg)';
+    });
+  }
+
+  // Toggle campo dia 2
+  if (tipo) {
+    tipo.addEventListener('change', function(){
+      if (!campoDia2) return;
+      if (this.value === 'quinzenal') {
+        campoDia2.style.display = 'block';
+        campoDia2.style.animation = 'fadeIn 0.3s ease';
+      } else {
+        campoDia2.style.display = 'none';
+      }
+    });
+  }
+
+  // LocalStorage key
+  const KEY = 'folhaPagamentoConfig';
+  
+  function loadConfig(){
+    try { 
+      return JSON.parse(localStorage.getItem(KEY)) || {}; 
+    } catch(e){ 
+      return {}; 
+    }
+  }
+  
+  function saveConfig(cfg){
+    localStorage.setItem(KEY, JSON.stringify(cfg));
+  }
+  
+  function calcularProximoPagamentoDias(cfg){
+    if (!cfg || !cfg.tipo || !cfg.dia1) return null;
+    
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = hoje.getMonth();
+    
+    function diffDias(data){
+      const ms = data - hoje;
+      return Math.max(0, Math.ceil(ms/86400000));
+    }
+    
+    if (cfg.tipo === 'mensal'){
+      let data = new Date(ano, mes, cfg.dia1);
+      if (data < hoje) data = new Date(ano, mes+1, cfg.dia1);
+      return diffDias(data);
+    } else {
+      let candidatos = [new Date(ano, mes, cfg.dia1)];
+      if (cfg.dia2) candidatos.push(new Date(ano, mes, cfg.dia2));
+      candidatos = candidatos.map(d => d < hoje ? new Date(ano, mes+1, d.getDate()) : d);
+      const prox = candidatos.sort((a,b)=>a-b)[0];
+      return diffDias(prox);
+    }
+  }
+  
+  function aplicarConfigNosCards(){
+    const cfg = loadConfig();
+    const el = document.getElementById('stat-proximo-pagamento');
+    const dias = calcularProximoPagamentoDias(cfg);
+    
+    if (el && typeof dias === 'number') {
+      if (dias === 0) {
+        el.textContent = 'Hoje';
+      } else if (dias === 1) {
+        el.textContent = '1 dia';
+      } else {
+        el.textContent = dias + ' dias';
+      }
+    } else if (el) {
+      el.textContent = 'Não configurado';
+    }
+  }
+
+  // Carregar configurações salvas
+  (function hydrate(){
+    const cfg = loadConfig();
+    if (form) {
+      if (cfg.tipo && tipo) tipo.value = cfg.tipo;
+      if (typeof cfg.dia1 !== 'undefined' && form.dia1) form.dia1.value = cfg.dia1;
+      if (typeof cfg.dia2 !== 'undefined' && form.dia2) form.dia2.value = cfg.dia2;
+      if (campoDia2 && tipo) {
+        campoDia2.style.display = (tipo.value === 'quinzenal') ? 'block' : 'none';
+      }
+    }
+    aplicarConfigNosCards();
+  })();
+
+  // Submit do formulário
+  if (form) {
+    form.addEventListener('submit', function(e){
+      e.preventDefault();
+      
+      const dia1 = Number(form.dia1?.value || 0);
+      const dia2 = Number(form.dia2?.value || 0) || null;
+      
+      // Validação
+      if (dia1 < 1 || dia1 > 31) {
+        alert('O dia do pagamento 1 deve estar entre 1 e 31!');
+        return;
+      }
+      
+      if (tipo.value === 'quinzenal' && (!dia2 || dia2 < 1 || dia2 > 31)) {
+        alert('O dia do pagamento 2 deve estar entre 1 e 31 para pagamento quinzenal!');
+        return;
+      }
+      
+      const cfg = {
+        tipo: tipo ? tipo.value : 'mensal',
+        dia1: dia1,
+        dia2: dia2
+      };
+      
+      saveConfig(cfg);
+      aplicarConfigNosCards();
+      
+      // Feedback visual
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      submitBtn.textContent = '✓ Salvo!';
+      submitBtn.style.background = 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)';
+      
+      setTimeout(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        fecharModal();
+      }, 1000);
+    });
+  }
+  
+  // CSS para animações
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .glass-button:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+      color: #fff !important;
+    }
+    
+    .glass-button-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .glass-input:focus {
+      outline: none;
+      border-color: rgba(102, 126, 234, 0.5) !important;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+  `;
+  document.head.appendChild(style);
+})();
+</script>

@@ -1,4 +1,8 @@
 /* solicitacoesCola.css — Liquid Glass style para Solicitações */
+:root {
+  /* valor default — altere para o seu padrão */
+  --bg-image: url('/img/glassmorphism5.jpg');
+}
 
 /* vars */
 :root{

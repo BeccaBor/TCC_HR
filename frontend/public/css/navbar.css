@@ -1,318 +1,526 @@
-:root{
-  --glass-bg: rgba(255,255,255,0.08);
-  --glass-border: rgba(255,255,255,0.18);
-  --glass-highlight: rgba(255,255,255,0.22);
-  --glass-shadow: 0 12px 36px rgba(8,10,20,0.12);
-  --accent: #7b6cff;
-  --accent-strong: #5141c4;
-  --text: rgba(255,255,255,0.96);      /* texto principal branco */
-  --muted: rgba(255,255,255,0.78);     /* texto secundário mais claro */
-  --muted-weak: rgba(255,255,255,0.60);
-  --link-hover-bg: rgba(255,255,255,0.06);
-  --backdrop-blur: 10px;
-  --radius-lg: 12px;
-  --radius-sm: 8px;
-
-  /* sizing */
-  --nav-height: 62px;
+/* === Global background via CSS variable (site-wide) === */
+:root {
+  /* valor default — altere para o seu padrão */
+  --bg-image: url('/img/glassmorphism5.jpg');
 }
 
-/* ---------------- Navbar (liquid glass) ---------------- */
-.navbar-cola {
+/* Use sempre a variável. Mantém o gradiente escuro por cima. */
+body {
+  /* gradiente sobre a imagem (mesmo efeito do seu design) */
+  background-image: linear-gradient(rgba(8,10,20,0.45), rgba(8,10,20,0.45)), var(--bg-image);
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; /* opcional, manter o fundo fixo */
+  transition: background-image .28s ease-in-out, background-position .28s ease;
+  /* se outras regras estiverem usando !important, descomente a linha abaixo com cautela:
+  background-image: linear-gradient(rgba(8,10,20,0.45), rgba(8,10,20,0.45)), var(--bg-image) !important;
+  */
+}
+
+/* ===== Variáveis Navbar Liquid Glass ===== */
+:root {
+  --nav-height: 70px;
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --backdrop-blur: 20px;
+  --text: rgba(255, 255, 255, 0.96);
+  --text-muted: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== Navbar Glass Effect ===== */
+.navbar-cola,
+.navbar-gestor {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 50;
+  padding: 1rem;
+   background: linear-gradient(135deg, rgba(235, 232, 252, 0.247), rgba(138, 92, 246, 0.151));
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+}
+
+.navbar-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  padding: 1rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  height: var(--nav-height);
-  padding: 18px 18px;
-  position: sticky;
-  top: 10px;
-  z-index: 1200;
-
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--radius-lg);
-  backdrop-filter: blur(var(--backdrop-blur)) saturate(1.04);
-  -webkit-backdrop-filter: blur(var(--backdrop-blur)) saturate(1.04);
-
-  overflow: visible;
-  color: var(--text);
 }
 
-/* small padding tweak so content doesn't sit too alto */
-.navbar-cola .brand-left,
-.navbar-cola .nav-links,
-.navbar-cola .nav-actions {
+/* ===== Brand/Logo ===== */
+.brand-left {
   display: flex;
   align-items: center;
+  gap: 0.75rem;
+  /* background: linear-gradient(135deg, #60a5fa, #a855f7);
+  border-radius: 12px; */
+   /* background: linear-gradient(135deg, rgba(255, 248, 248, 0.253), rgba(138, 92, 246, 0.151));
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  color: white; */
 }
 
-/* ---------------- thin divider under navbar ---------------- */
-.linha {
-  height: 12px;
-  width: 100%;
-  margin-top: 12px;
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
-  box-shadow: 0 12px 24px rgba(0,0,0,0.04) inset;
-}
+ 
 
-/* ---------------- Brand ---------------- */
-.brand-left { margin-left: 6px; }
-.brand-left img {
-  height: 36px;
-  width: auto;
-  -webkit-user-drag: none;
-  filter: drop-shadow(0 6px 18px rgba(0,0,0,0.06));
-}
+/* .brand-left a :hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.6), rgba(139, 92, 246, 0.6));
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+   border-radius: 12px;
+} */
 
-/* ---------------- Links (centro) ---------------- */
-.nav-links { display:flex; gap:12px; align-items:center; }
-
-/* btnNav: baseado na navbar do gestor, adaptado ao glass */
-.btnNav {
-  color: var(--text);
-  background-color: rgba(255, 255, 255, 0.03);
-  border-radius: 14px;
-  padding: 8px 14px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: transform .14s ease, box-shadow .14s ease, background-color .14s ease;
-  box-shadow: 0 6px 16px rgba(10,12,20,0.03);
-  border: 1px solid rgba(255,255,255,0.04);
-  text-decoration: none;
-  display: inline-flex;
+.brand-logo {
+  width: 80px;
+  height: 200px;
+  background: linear-gradient(135deg, #60a5fa, #a855f7);
+  border-radius: 12px;
+  display: flex;
   align-items: center;
-  gap: .5rem;
-  -webkit-tap-highlight-color: transparent;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* hover / focus */
-.btnNav:hover,
-.btnNav:focus {
-  transform: translateY(-3px);
-  color: var(--accent);
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.06));
-  box-shadow: 0 12px 36px rgba(81,65,196,0.04);
-}
-.btnNav:active { transform: translateY(-1px); }
-
-/* active state (visual para a rota atual) */
-.btnNav.active,
-.btnNav[aria-current="page"] {
-  background: linear-gradient(135deg, rgba(106,90,205,0.12), rgba(81,65,196,0.06));
-  color: #fff;
-  border: 1px solid rgba(106,90,205,0.14);
-  box-shadow: 0 10px 28px rgba(81,65,196,0.06);
+.brand-logo span {
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
 }
 
-/* ---------------- Actions (direita) ---------------- */
-.nav-actions { display:flex; align-items:center; gap:10px; margin-right:6px; }
-
-/* profile button (avatar) */
-.btn-profile {
-  width:44px;
-  height:44px;
-  padding:0;
-  border-radius:10px;
-  display:inline-grid;
-  place-items:center;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.03);
-  cursor:pointer;
-  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
-}
-.btn-profile:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
-.btn-profile:active { transform: translateY(0); }
-.btn-profile:focus-visible {
-  outline: 3px solid rgba(81,65,196,0.12);
-  outline-offset: 2px;
+.brand-left h1 {
+  color: white;
+  font-weight: 700;
+  font-size: 2.25rem;
+  margin: 0;
 }
 
-/* avatar image */
-.avatar-sm {
-  width:40px;
-  height:40px;
-  border-radius: 8px;
-  object-fit: cover;
-  display:block;
-  border: 1px solid rgba(0,0,0,0.04);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+.brand-left img {
+  /* height: 60px;
+  width: auto; */
+
+   padding: 10px 16px;
+  box-shadow: 0 10px 15px rgb(50, 50, 77), inset 2px 0px 5px rgba(50, 50, 77, 0.685);
+  background-color: rgba(255, 255, 255, 0.505);
+  border-radius: 2rem;
+  /* width: 100%; */
+  /* max-width: 420px; */
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.204), inset 0 0 30px rgba(255, 255, 255, 0.05);
+    -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(4px);
+  /* border: 1.5px solid rgba(255, 255, 255, 0.849); */
+  margin-left: 26px;
+
 }
 
-/* initials fallback */
-.avatar-initials {
-  width:40px;
-  height:40px;
-  border-radius:8px;
-  display:grid;
-  place-items:center;
-  background: linear-gradient(180deg, rgba(81,65,196,0.18), rgba(81,65,196,0.06));
-  color: var(--text);
-  font-weight:700;
-  font-size:1rem;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+/* ===== Navigation Links ===== */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* three-dots small button (opcional) */
-#btnMenu {
-  width:40px;
-  height:40px;
-  border-radius: 10px;
-  display:inline-grid;
-  place-items:center;
+.nav-item,
+.btnNav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  border: none;
   background: transparent;
-  border: 1px solid rgba(255,255,255,0.03);
-  color: var(--text);
-  transition: background .12s ease, transform .12s ease;
-}
-#btnMenu:hover,
-#btnMenu:focus { background: var(--link-hover-bg); color: var(--accent); transform: translateY(-2px); }
-#btnMenu:focus-visible { outline: 3px solid rgba(81,65,196,0.12); outline-offset: 2px; }
-
-/* ---------------- Popover / Dropdown / Modal styling ---------------- */
-
-/* Popover main (Bootstrap override) */
-.popover {
-  border-radius: var(--radius-lg);
-  box-shadow: 0 18px 48px rgba(0,0,0,0.18);
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.08);
-  color: var(--text);
-  min-width: 220px;
-  padding: 6px;
-  z-index: 1600;
+  cursor: pointer;
 }
 
-/* Custom popover internal wrapper for better spacing */
+.nav-item:hover,
+.btnNav:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.nav-item.active,
+.btnNav.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Efeito de brilho no hover */
+.nav-item::before,
+.btnNav::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.nav-item:hover::before,
+.btnNav:hover::before {
+  left: 100%;
+}
+
+/* ===== Nav Actions (direita) ===== */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Botão de perfil */
+.btn-profile {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-profile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.avatar-sm {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.avatar-initials {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(139, 92, 246, 0.3));
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Menu extra button */
+#btnMenu {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+#btnMenu:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+/* ===== Popover/Dropdown ===== */
 .popover-profile {
-  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-  padding: 8px 6px;
-  color: var(--text);
-  backdrop-filter: blur(var(--backdrop-blur));
-  -webkit-backdrop-filter: blur(var(--backdrop-blur));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 0.75rem;
+  color: white;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  min-width: 220px;
 }
 
-/* no default padding so layout is exact */
-.popover .popover-body { padding: 0; }
-
-/* Fallback popover (manual) */
-.fallback-popover {
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-  color: var(--text);
-  padding: 6px;
-  z-index: 1600;
-  box-shadow: 0 18px 48px rgba(0,0,0,0.16);
+.popover {
+  border: none;
+  background: transparent;
 }
 
-/* Buttons inside the popover */
+.popover-body {
+  padding: 0;
+}
+
+/* Botões do popover */
 .btn-popover-action {
   width: 100%;
   text-align: left;
-  padding: 8px 10px;
-  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
   background: transparent;
   color: var(--text);
   border: none;
-  font-weight: 700;
-  transition: background .12s ease, color .12s ease;
-}
-.btn-popover-action:hover,
-.btn-popover-action:focus {
-  background: rgba(255,255,255,0.06);
-  color: #fff;
-  outline: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-/* Separate styling for the logout button to be more prominent */
-.popover .btn-danger.btn-popover-action {
-  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
-  color: #fff;
-  font-weight: 800;
-}
-.popover .btn-outline-secondary.btn-popover-action {
-  background: transparent;
-  color: var(--muted);
-  border: 1px solid rgba(255,255,255,0.03);
+.btn-popover-action:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
-/* dropdown-menu (bootstrap fallback) */
-.dropdown-menu {
-  padding: 6px 0;
-  min-width: 200px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 12px 36px rgba(0,0,0,0.12);
+.btn-danger.btn-popover-action {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+  color: #fca5a5;
 }
-.dropdown-menu .dropdown-item {
-  display:flex;
-  align-items:center;
-  gap:.6rem;
-  padding: 10px 14px;
-  color: var(--muted);
-  font-weight: 700;
-  transition: background .12s ease, color .12s ease;
-}
-.dropdown-menu .dropdown-item:hover,
-.dropdown-menu .dropdown-item:focus {
-  background: rgba(255,255,255,0.05);
-  color: var(--text);
-}
-.dropdown-menu .dropdown-item.text-danger { color: #ffd7d7; font-weight:700; }
 
-/* small divider tweak */
-.dropdown-divider { margin: 6px 0; border-top: 1px solid rgba(255,255,255,0.04); }
+.btn-danger.btn-popover-action:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.5), rgba(220, 38, 38, 0.5));
+  color: white;
+}
 
-/* Modal (Bootstrap) content (glass) */
+/* ===== Modal ===== */
 #confirmLogoutModal .modal-content {
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.3);
+  color: white;
+}
+
+#confirmLogoutModal .modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#confirmLogoutModal .modal-body {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#confirmLogoutModal .btn {
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-  box-shadow: 0 24px 60px rgba(0,0,0,0.14);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  color: var(--text);
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
 }
-#confirmLogoutModal .modal-header { border-bottom: none; }
-#confirmLogoutModal .modal-body { text-align:center; color: var(--text); }
 
-/* modal buttons */
-#confirmLogoutModal .btn { border-radius: 10px; padding: .5rem .75rem; font-weight:700; }
 #confirmLogoutModal .btn-secondary {
-  background: rgba(255,255,255,0.05);
-  color: var(--text);
-  border: 1px solid rgba(255,255,255,0.04);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
 }
+
 #confirmLogoutModal .btn-danger {
-  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
-  color: #fff;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
   border: none;
+  color: white;
 }
 
-/* ---------------- small helpers & accessibility ---------------- */
-.btn-link.p-0 { background: transparent; border: none; color: inherit; }
-
-.dropdown-item:active { outline: none; box-shadow: none; }
-
-/* Ensure high-contrast readable fallback (user agent where backdrop-filter unsupported) */
-@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .navbar-cola { background: rgba(255, 255, 255, 0.12); color: var(--text); }
-  .popover, .dropdown-menu, #confirmLogoutModal .modal-content { background: rgba(255, 255, 255, 0.14); color: var(--text); }
+/* ===== Linha decorativa ===== */
+.linha {
+  height: 8px;
+  width: 100%;
+  margin-top: 0.5rem;
+  border-radius: 0 0 12px 12px;
+  background: linear-gradient(90deg, 
+    rgba(59, 130, 246, 0.1) 0%,
+    rgba(168, 85, 247, 0.1) 50%,
+    rgba(236, 72, 153, 0.1) 100%
+  );
 }
 
-/* ---------------- Responsive ---------------- */
-@media (max-width: 920px) {
-  .navbar-cola { padding: 8px 12px; gap: 8px; height: 56px; }
-  .nav-links { display: none; } /* esconder links para mobile (implementar hambúrguer se quiser) */
-  .brand-left img { height: 30px; }
+/* ===== Responsivo ===== */
+@media (max-width: 1024px) {
+  .nav-links {
+    display: none;
+  }
+
+  .brand-left h1 {
+    display: none;
+  }
+
+  .navbar-glass {
+    padding: 0.75rem 1rem;
+  }
 }
 
-/* Reduced motion */
+@media (max-width: 640px) {
+  .navbar-cola,
+  .navbar-gestor {
+    padding: 0.5rem;
+  }
+
+  .brand-logo {
+    width: 36px;
+    height: 36px;
+  }
+
+  .btn-profile {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* ===== Animações ===== */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .btnNav, .btn-profile, #btnMenu, .popover, .dropdown-menu { transition: none !important; animation: none !important; }
+  .nav-item, .btnNav, .btn-profile, #btnMenu {
+    transition: none;
+  }
+}
+/* ===== BG PICKER (modal/panel) - Adicione ao final do navbar.css ===== */
+.bgpicker-overlay {
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(4,6,12,0.55);
+  z-index: 1400;
+  padding: 20px;
+}
+.bgpicker-overlay[aria-hidden="false"] { 
+  display: flex; 
+}
+
+.bgpicker-panel {
+  width: min(980px, 96%);
+  max-height: calc(100vh - 80px);
+  overflow: auto;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.04);
+  box-shadow: 0 28px 80px rgba(6,10,20,0.6);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+}
+
+.bgpicker-header { 
+  display:flex; 
+  align-items:center; 
+  justify-content:space-between; 
+  gap:12px; 
+  padding: 6px 8px 10px; 
+}
+.bgpicker-header h3 { 
+  margin:0; 
+  font-size:1.05rem; 
+  color: rgba(255,255,255,0.96); 
+}
+.bgpicker-header .btn-close { 
+  background: transparent; 
+  border: none; 
+  width:34px; 
+  height:34px; 
+  border-radius:8px; 
+  cursor:pointer; 
+  color: rgba(255,255,255,0.7);
+}
+
+.bgpicker-body { 
+  padding: 8px 8px 12px; 
+}
+.bgpicker-body .muted.small { 
+  color: rgba(255,255,255,0.78); 
+  margin-bottom:8px; 
+}
+
+.bg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+/* thumb */
+.bg-thumb {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: rgba(255,255,255,0.02);
+  transition: transform .14s ease, box-shadow .14s ease, border-color .12s ease;
+}
+.bg-thumb img { 
+  width: 100%; 
+  height: 92px; 
+  object-fit: cover; 
+  display:block; 
+}
+.bg-thumb:hover { 
+  transform: translateY(-6px); 
+  box-shadow: 0 14px 40px rgba(6,10,20,0.28); 
+}
+
+/* selected */
+.bg-thumb.selected {
+  border-color: rgba(123,108,255,0.28);
+  box-shadow: 0 12px 36px rgba(81,65,196,0.12);
+}
+.bg-thumb .thumb-check {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  background: linear-gradient(90deg, #7b6cff, #5141c4);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  box-shadow: 0 6px 18px rgba(81,65,196,0.12);
+}
+
+/* footer */
+.bgpicker-footer { 
+  display:flex; 
+  justify-content:space-between; 
+  gap:12px; 
+  padding: 10px 4px 6px; 
+}
+.bgpicker-footer .btn { 
+  padding: 8px 12px; 
+  border-radius: 10px; 
+}
+
+/* mobile adjustments */
+@media (max-width: 700px) {
+  .bg-grid { 
+    grid-template-columns: repeat(2, 1fr); 
+    gap: 10px; 
+  }
+  .bg-thumb img { 
+    height: 84px; 
+  }
 }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Tempo de geração: 05/10/2025 às 03:21
+-- Tempo de geração: 08/10/2025 às 03:54
 -- Versão do servidor: 10.4.32-MariaDB
 -- Versão do PHP: 8.2.12
 
@@ -191,7 +191,8 @@ INSERT INTO `pontos` (`id`, `usuario_id`, `nome`, `setor`, `tipo_usuario`, `tipo
 (3, 1, 'teste', 'Departamento Pessoal', 'gestor', 'entrada', 8, '12345678910111', '2025-10-04 19:44:27'),
 (4, 1, 'teste', 'Departamento Pessoal', 'gestor', 'entrada', 6, '12345678910111', '2025-10-04 19:44:36'),
 (5, 7, 'cris', 'TI', 'colaborador', 'entrada', 8, '55770680881', '2025-10-04 19:56:20'),
-(6, 7, 'cris', 'TI', 'colaborador', 'saida', 6, '55770680881', '2025-10-04 19:56:37');
+(6, 7, 'cris', 'TI', 'colaborador', 'saida', 6, '55770680881', '2025-10-04 19:56:37'),
+(7, 7, 'cris', 'TI', 'colaborador', 'saida', 8, '55770680881', '2025-10-07 17:42:33');
 
 -- --------------------------------------------------------
 
@@ -202,14 +203,29 @@ INSERT INTO `pontos` (`id`, `usuario_id`, `nome`, `setor`, `tipo_usuario`, `tipo
 CREATE TABLE `realizarsolicitacoes` (
   `id` int(11) NOT NULL,
   `usuario_id` int(11) NOT NULL,
-  `tipo_solicitacao` enum('ferias','alteracao_dados','consulta_banco_horas','desligamento','reembolso','outros') NOT NULL,
+  `tipo_solicitacao` enum('ferias','alteracao_dados','consulta_banco_horas','banco_horas','desligamento','reembolso','outros','reajuste_salarial') NOT NULL,
   `descricao` text DEFAULT NULL,
   `data_solicitacao` date DEFAULT current_timestamp(),
-  `status` enum('pendente','aprovada','rejeitada') DEFAULT 'pendente',
+  `status` enum('pendente','aprovada','rejeitada','reprovada') DEFAULT 'pendente',
   `gestor_id` int(11) DEFAULT NULL,
   `data_aprovacao_rejeicao` date DEFAULT NULL,
-  `observacao_gestor` text DEFAULT NULL
+  `observacao_gestor` text DEFAULT NULL,
+  `titulo` varchar(255) DEFAULT NULL,
+  `data_inicio` date DEFAULT NULL,
+  `data_fim` date DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Despejando dados para a tabela `realizarsolicitacoes`
+--
+
+INSERT INTO `realizarsolicitacoes` (`id`, `usuario_id`, `tipo_solicitacao`, `descricao`, `data_solicitacao`, `status`, `gestor_id`, `data_aprovacao_rejeicao`, `observacao_gestor`, `titulo`, `data_inicio`, `data_fim`, `created_at`, `updated_at`) VALUES
+(1, 7, 'outros', NULL, '2025-10-05', 'pendente', NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-05 19:42:23', NULL),
+(2, 7, 'outros', NULL, '2025-10-07', 'pendente', NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-07 20:05:37', NULL),
+(3, 7, 'reajuste_salarial', NULL, '2025-10-07', 'pendente', NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-07 20:34:42', NULL),
+(4, 7, 'reajuste_salarial', NULL, '2025-10-07', 'pendente', NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-07 20:41:47', NULL);
 
 -- --------------------------------------------------------
 
@@ -287,6 +303,35 @@ INSERT INTO `setores` (`id`, `empresa_id`, `nome_setor`, `descricao`) VALUES
 (9, 9, 'odio', NULL),
 (10, 9, 'PENIANO', NULL),
 (11, 1, 'Departamento Pessoal', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `solicitacao_anexos`
+--
+
+CREATE TABLE `solicitacao_anexos` (
+  `id` int(11) NOT NULL,
+  `solicitacao_id` int(11) NOT NULL,
+  `nome` varchar(255) NOT NULL,
+  `path` varchar(500) NOT NULL,
+  `criado_em` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estrutura para tabela `solicitacao_log`
+--
+
+CREATE TABLE `solicitacao_log` (
+  `id` int(11) NOT NULL,
+  `solicitacao_id` int(11) NOT NULL,
+  `gestor_id` int(11) DEFAULT NULL,
+  `acao` varchar(128) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `observacao` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -501,6 +546,21 @@ ALTER TABLE `setores`
   ADD KEY `fk_setores_empresa` (`empresa_id`);
 
 --
+-- Índices de tabela `solicitacao_anexos`
+--
+ALTER TABLE `solicitacao_anexos`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_solicitacao_id` (`solicitacao_id`);
+
+--
+-- Índices de tabela `solicitacao_log`
+--
+ALTER TABLE `solicitacao_log`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `solicitacao_id` (`solicitacao_id`),
+  ADD KEY `gestor_id` (`gestor_id`);
+
+--
 -- Índices de tabela `usuario`
 --
 ALTER TABLE `usuario`
@@ -588,13 +648,13 @@ ALTER TABLE `logs_acesso`
 -- AUTO_INCREMENT de tabela `pontos`
 --
 ALTER TABLE `pontos`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT de tabela `realizarsolicitacoes`
 --
 ALTER TABLE `realizarsolicitacoes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT de tabela `realizarupload`
@@ -613,6 +673,18 @@ ALTER TABLE `registroponto`
 --
 ALTER TABLE `setores`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT de tabela `solicitacao_anexos`
+--
+ALTER TABLE `solicitacao_anexos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de tabela `solicitacao_log`
+--
+ALTER TABLE `solicitacao_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT de tabela `usuario`
@@ -696,6 +768,12 @@ ALTER TABLE `realizarsolicitacoes`
 --
 ALTER TABLE `setores`
   ADD CONSTRAINT `fk_setores_empresa` FOREIGN KEY (`empresa_id`) REFERENCES `empresa` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Restrições para tabelas `solicitacao_anexos`
+--
+ALTER TABLE `solicitacao_anexos`
+  ADD CONSTRAINT `fk_solicitacao_anexos_realizarsolicitacoes` FOREIGN KEY (`solicitacao_id`) REFERENCES `realizarsolicitacoes` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Restrições para tabelas `usuario`

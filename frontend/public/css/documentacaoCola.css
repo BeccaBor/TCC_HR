@@ -1,5 +1,6 @@
 /* ---- variáveis ---- */
 :root{
+  --bg-image: url('/img/glassmorphism5.jpg');
   --bg-a: rgba(6,10,25,0.78);
   --bg-b: rgba(16,12,40,0.85);
   --glass-bg: rgba(255,255,255,0.06);

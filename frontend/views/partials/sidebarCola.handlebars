@@ -1,23 +1,37 @@
-{{!-- <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>{{title}}</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="/css/colaborador.css">
-   
+<aside class="sidebar cola-sidebar" role="navigation" aria-label="Menu do colaborador">
+  <div class="sidebar-inner">
+    {{!-- <div class="logo-small">
+      <img src="/img/Conecthar.png" alt="Conecthar" height="36">
+    </div> --}}
 
-...
-</head>
-<aside class="sidebar">
-  <h3>Menu</h3>
-  <ul class="sidebar-list">
-    <li><a href="/colaborador/dados" class="{{#ifActive '/colaborador/dados'}}active{{/ifActive}}">Meus dados</a></li>
-    <li><a href="/colaborador/holerites" class="{{#ifActive '/colaborador/holerites'}}active{{/ifActive}}">Holerites</a></li>
-    <li><a href="/colaborador/documentacao" class="{{#ifActive '/colaborador/documentacao'}}active{{/ifActive}}">Documentação</a></li>
-    <li><a href="/colaborador/solicitacoes" class="{{#ifActive '/colaborador/solicitacoes'}}active{{/ifActive}}">Solicitações</a></li>
-  </ul>
+    <section class="sidebar-section categories">
+      <h4>Categorias Pessoais</h4>
+      <ul class="categories-list">
+        <li class="category-item">
+          <a href="/colaborador/dados" class="{{#ifActive '/colaborador/dados'}}active{{/ifActive}}">
+            Meus dados
+          </a>
+          <span class="toggle-dot active-dot" aria-hidden="true"></span>
+        </li>
+
+        <li class="category-item">
+          <a href="/colaborador/holerites" class="{{#ifActive '/colaborador/holerites'}}active{{/ifActive}}">
+            Holerites
+          </a>
+          <span class="toggle-dot"></span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="sidebar-section quick-actions">
+      <h4>Ações rápidas</h4>
+      <ul class="quick-list">
+        <li><a href="/colaborador/procurar" title="Procurar">🔍 Procurar</a></li>
+        <li><a href="/colaborador/downloads" title="Recentes Download">⬇️ Recentes Download</a></li>
+        <li><a href="/colaborador/arquivados" title="Arquivados">🗂️ Arquivados</a></li>
+      </ul>
+    </section>
+
+    <div class="sidebar-footer muted">Versão colaborador</div>
+  </div>
 </aside>
-
-
-</html> --}}

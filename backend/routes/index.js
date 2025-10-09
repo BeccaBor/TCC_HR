@@ -10,6 +10,9 @@ const uploadRoutes = require('./uploadRoutes');
 const pontoRoutes = require('./pontoRoutes');
 const setorRoutes = require('./setorRoutes');
 const solicitacoesRoutes = require('./solicitacoesRoutes');
+const folhaRoutes = require('./folhaRoutes')
+// const folhaRoutes = require('./routes/folhaRoutes');
+
 // Observação:
 // - Não aplicamos verificarToken aqui globalmente para grupos inteiros,
 //   porque cada router (gestor/colaborador) controla quais endpoints são públicos ou protegidos.
@@ -22,4 +25,6 @@ router.use('/upload', uploadRoutes);
 router.use('/ponto', pontoRoutes);
 router.use('/setor', setorRoutes);
 router.use('/solicitacoes', solicitacoesRoutes);
+router.use('/folha', folhaRoutes);
+// app.use('/gestor/folhapaga', folhaRoutes);
 module.exports = router;

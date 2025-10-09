@@ -1,102 +1,128 @@
 // backend/routes/solicitacoesRoutes.js
 const express = require('express');
 const router = express.Router();
-const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
 
 const solicitacoesController = require('../controllers/solicitacoesController');
 const { verificarToken, autorizarTipoUsuario } = require('../middlewares/authMiddleware');
 
-// Pasta de uploads (configurável via env)
-const UPLOADS_DIR = process.env.UPLOADS_DIR
-  ? path.resolve(process.env.UPLOADS_DIR)
-  : path.resolve(__dirname, '..', 'uploads');
+/**
+ * Util helpers
+ */
+function warnIfNotFunction(name, fn) {
+  if (typeof fn !== 'function') {
+    console.warn(`AVISO: "${name}" não é uma função. Tipo atual: ${typeof fn}. Alguns endpoints podem falhar se esse método for necessário.`);
+    return false;
+  }
+  return true;
+}
 
-// garante que a pasta exista
+console.log('DEBUG solicitacoesRoutes -> carregando middlewares e controller...');
+
+/**
+ * Verificações básicas (não lançam erro para não quebrar o servidor em runtime,
+ * apenas logam avisos para facilitar debug).
+ */
+warnIfNotFunction('verificarToken', verificarToken);
+warnIfNotFunction('autorizarTipoUsuario', autorizarTipoUsuario);
+
+warnIfNotFunction('solicitacoesController.criar', solicitacoesController.criar);
+warnIfNotFunction('solicitacoesController.listarMe', solicitacoesController.listarMe);
+warnIfNotFunction('solicitacoesController.getById', solicitacoesController.getById);
+warnIfNotFunction('solicitacoesController.atualizarStatus', solicitacoesController.atualizarStatus);
+warnIfNotFunction('solicitacoesController.listarTodos', solicitacoesController.listarTodos);
+warnIfNotFunction('solicitacoesController.adicionarAnexos', solicitacoesController.adicionarAnexos);
+warnIfNotFunction('solicitacoesController.removerAnexo', solicitacoesController.removerAnexo);
+warnIfNotFunction('solicitacoesController.atualizar', solicitacoesController.atualizar);
+warnIfNotFunction('solicitacoesController.deletar', solicitacoesController.deletar);
+warnIfNotFunction('solicitacoesController.serveAnexo', solicitacoesController.serveAnexo);
+
+/**
+ * Instanciar middleware de autorização para gestor de modo resiliente.
+ * Tenta array primeiro, depois string. Se falhar, usa fallback que libera acesso
+ * (é melhor logar do que travar o carregamento das rotas; ajuste conforme sua política).
+ */
+let gestorMiddleware = (req, res, next) => next();
 try {
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  if (typeof autorizarTipoUsuario === 'function') {
+    try {
+      gestorMiddleware = autorizarTipoUsuario(['gestor']);
+      if (typeof gestorMiddleware !== 'function') throw new Error('retorno não é função');
+    } catch (err) {
+      // tentar com string
+      gestorMiddleware = autorizarTipoUsuario('gestor');
+      if (typeof gestorMiddleware !== 'function') throw new Error('retorno não é função');
+    }
+  } else {
+    console.warn('autorizarTipoUsuario não disponível — usando fallback que libera acesso para rotas de gestor.');
+  }
 } catch (err) {
-  console.error('Falha ao criar pasta de uploads:', UPLOADS_DIR, err);
-  // não throw aqui para não quebrar o boot do app, mas você pode querer parar a aplicação em produção
+  console.warn('Falha instanciando autorizarTipoUsuario para "gestor":', err && err.message);
+  gestorMiddleware = (req, res, next) => next();
 }
 
-// Limite de upload (MB) — default 15MB
-const MAX_UPLOAD_MB = process.env.MAX_UPLOAD_MB ? Number(process.env.MAX_UPLOAD_MB) : 15;
-const MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024;
+/**
+ * uploadMiddleware: preferir o middleware exportado pelo controller (config centralizada).
+ * Se não existir, usar noop que chama next().
+ */
+const uploadMiddleware = (solicitacoesController && solicitacoesController.uploadMiddleware) || ((req, res, next) => next());
 
-// Multer storage
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOADS_DIR);
-  },
-  filename: (req, file, cb) => {
-    // usa id do usuário quando disponível (verificarToken é executado antes do upload na rota)
-    const userPart = (req.usuario && req.usuario.id) ? `u${req.usuario.id}-` : '';
-    const unique = Date.now() + '-' + Math.random().toString(36).slice(2, 8);
-    const ext = path.extname(file.originalname || '') || '';
-    const safeName = (file.originalname || 'anexo').replace(/\s+/g, '-').replace(/[^a-zA-Z0-9\.\-_]/g, '');
-    cb(null, `${userPart}${unique}${ext || path.extname(safeName)}`);
-  }
-});
+/**
+ * ROTAS
+ *
+ * Ordem importante:
+ * - rotas fixas/curtas (anexo, me, minhas, etc)
+ * - rota raiz/listagem (GET '/')
+ * - rotas com parâmetro (/:id) por último
+ */
 
-// filtro de tipos permitidos
-function fileFilter(req, file, cb) {
-  const allowed = /\.(pdf|jpe?g|png)$/i;
-  const original = file.originalname || '';
-  if (!allowed.test(original)) {
-    return cb(new Error('Tipo de arquivo não permitido. Permitidos: pdf, jpg, jpeg, png'), false);
-  }
-  cb(null, true);
-}
+// Serve arquivo anexo (protegido). Rota curta para evitar conflito com /:id
+router.get('/anexo/:filename', verificarToken, solicitacoesController.serveAnexo);
 
-const upload = multer({
-  storage,
-  limits: { fileSize: MAX_UPLOAD_BYTES },
-  fileFilter
-});
+// Rotas para o próprio usuário (variações)
+// GET /me, /minhas, /usuario -> listam solicitações do usuário autenticado
+router.get('/me', verificarToken, solicitacoesController.listarMe);
+router.get('/minhas', verificarToken, solicitacoesController.listarMe);
+router.get('/usuario', verificarToken, solicitacoesController.listarMe);
 
-// Observações:
-// - As rotas abaixo costumam ser montadas em /api/solicitacoes no seu index de rotas.
-// - O middleware verificarToken precisa popular req.usuario (ou req.user). Garantir essa ordem (verificarToken antes do upload).
-
-// Criar solicitação (aceita multipart/form-data com campo 'anexo')
+// Criar solicitação (multipart/form-data)
+// usa uploadMiddleware (pode aceitar campos 'anexo' ou 'anexos' conforme config do controller)
 router.post(
   '/',
   verificarToken,
-  upload.single('anexo'), // espera campo 'anexo' do front
+  uploadMiddleware,
   solicitacoesController.criar
 );
 
-// Listar minhas solicitações (usuário autenticado)
-router.get(
-  '/me',
+// Adicionar anexos a solicitação existente
+router.post(
+  '/:id/anexos',
   verificarToken,
-  solicitacoesController.listarMe
+  uploadMiddleware,
+  solicitacoesController.adicionarAnexos
 );
 
-// Buscar por id (autenticado)
-router.get(
-  '/:id',
+// Remover anexo
+router.delete(
+  '/:id/anexos/:anexoId',
   verificarToken,
-  solicitacoesController.getById
+  solicitacoesController.removerAnexo
 );
 
-// Atualizar status (apenas gestores) - mantido PUT por compatibilidade com seu controller
-// Sugestão: usar PATCH /:id/status para semanticamente indicar "alteração parcial"
-router.put(
-  '/:id/status',
-  verificarToken,
-  autorizarTipoUsuario(['gestor']),
-  solicitacoesController.atualizarStatus
-);
+// Listar todas (gestor) - colocar antes de '/:id' para evitar conflitos
+router.get('/', verificarToken, gestorMiddleware, solicitacoesController.listarTodos);
 
-// Listar todos (apenas gestores)
-router.get(
-  '/',
-  verificarToken,
-  autorizarTipoUsuario(['gestor']),
-  solicitacoesController.listarTodos
-);
+// Atualizar status (somente gestor)
+// suportar PATCH e PUT por compatibilidade
+router.patch('/:id/status', verificarToken, gestorMiddleware, solicitacoesController.atualizarStatus);
+router.put('/:id/status', verificarToken, gestorMiddleware, solicitacoesController.atualizarStatus);
+
+// Atualizar campos da solicitação (autor ou gestor)
+router.patch('/:id', verificarToken, solicitacoesController.atualizar);
+
+// Deletar solicitação (autor ou gestor)
+router.delete('/:id', verificarToken, solicitacoesController.deletar);
+
+// Buscar por id (detalhes) - rota por último para não conflitar com as anteriores
+router.get('/:id', verificarToken, solicitacoesController.getById);
 
 module.exports = router;

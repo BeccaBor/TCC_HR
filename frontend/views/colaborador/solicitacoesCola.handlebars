@@ -8,11 +8,14 @@
         <h1>Minhas Solicitações</h1>
         <p>Gerencie suas solicitações ao RH de forma rápida e organizada. Clique em um cartão para abrir o formulário.</p>
       </div>
+      <div class="sol-header-actions">
+        <!-- botão para recarregar manualmente -->
+        <button id="refreshHistoryBtn" class="btn btn-sm btn-outline">Atualizar</button>
+      </div>
     </header>
 
     <!-- linha de cards (navbar-like) -->
     <section class="sol-cards-row" role="navigation" aria-label="Tipos de solicitações">
-      <!-- cada card tem data-type que o script usa -->
       <button class="sol-card" data-type="ferias" title="Pedido de Férias">
         <div class="sol-card-title">Pedido de Férias</div>
         <div class="sol-card-desc">Solicitar período de férias (siga CLT).</div>
@@ -39,10 +42,9 @@
       </button>
     </section>
 
-    <!-- conteúdo principal: formulário (modal) será dinâmico, histórico abaixo -->
+    <!-- conteúdo principal: formulário (modal) será injetado; histórico à direita -->
     <section class="sol-content">
       <div class="sol-forms-area">
-        <!-- placeholder: instruções / call-to-action -->
         <div class="sol-instructions glass-panel">
           <h3>Como funciona</h3>
           <p>
@@ -70,8 +72,7 @@
   </main>
 </div>
 
-<!-- Modal DINÂMICO: injetado pelo script quando o usuário clica -->
-<!-- também incluí o template do modal aqui (será clonado pelo JS) -->
+<!-- Template do modal -->
 <template id="modalTemplate">
   <div class="modal-overlay" role="dialog" aria-modal="true">
     <div class="modal-panel glass-panel">
@@ -95,98 +96,66 @@
   </div>
 </template>
 
+<!-- Script refatorado: substitua o anterior por este -->
 <script>
 (() => {
+  const DEBUG = false; // true para logs e inspeção
   const BACKEND_URL = '{{BACKEND_URL}}' || window.BACKEND_URL || 'http://localhost:3001';
   const API_BASE = (BACKEND_URL.endsWith('/api')) ? BACKEND_URL : (BACKEND_URL + '/api');
 
-  // ------------------ Helpers ------------------
-  const getToken = () => {
-    try { return localStorage.getItem('token'); } catch (e) { return null; }
-  };
+  const getToken = () => { try { return localStorage.getItem('token'); } catch (e) { return null; } };
   function buildAuthHeaders(extra = {}) {
     const headers = { ...extra };
     const token = getToken();
     if (token) headers['Authorization'] = `Bearer ${token}`;
     return headers;
   }
+  async function safeJsonResponse(res) { try { return await res.json(); } catch (e) { return null; } }
+  function safeJsonParse(str) { try { return JSON.parse(str); } catch (e) { return null; } }
+  function safeStringify(obj, maxLen = 20000) { try { const s = JSON.stringify(obj); return s.length > maxLen ? s.slice(0, maxLen) + '…' : s; } catch (e) { return '{}'; } }
+  function escapeHtml(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function formatDateTime(val) { try { if (!val) return '—'; const d = new Date(val); if (isNaN(d)) return String(val); return d.toLocaleString('pt-BR'); } catch (e) { return String(val); } }
+  function formatDate(val) { try { if (!val) return '—'; const d = new Date(val); if (isNaN(d)) return String(val); return d.toLocaleDateString('pt-BR'); } catch (e) { return String(val); } }
 
-  async function safeJsonResponse(res) {
-    try { return await res.json(); } catch (e) { return null; }
-  }
-  function safeJsonParse(str) {
-    try { return JSON.parse(str); } catch (e) { return null; }
-  }
-  function safeStringify(obj, maxLen = 20000) {
-    try {
-      const s = JSON.stringify(obj);
-      return s.length > maxLen ? s.slice(0, maxLen) + '…' : s;
-    } catch (e) { return '{}'; }
-  }
-
-  function escapeHtml(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
-  }
-
-  function formatDateTime(val) {
-    try {
-      if (!val) return '—';
-      const d = new Date(val);
-      if (isNaN(d)) return String(val);
-      return d.toLocaleString('pt-BR');
-    } catch (e) { return String(val); }
-  }
-  function formatDate(val) {
-    try {
-      if (!val) return '—';
-      const d = new Date(val);
-      if (isNaN(d)) return String(val);
-      return d.toLocaleDateString('pt-BR');
-    } catch (e) { return String(val); }
-  }
-
-  function normalizeStatus(s) {
-    if (!s) return 'Pendente';
-    return String(s).trim();
-  }
+  function normalizeStatus(s) { if (!s) return 'Pendente'; return String(s).trim(); }
   function statusClassFrom(status) {
     const st = String(status || '').toLowerCase();
     if (st.includes('aprov')) return 'status-badge success';
-    if (st.includes('rejeit') || st.includes('recus')) return 'status-badge danger';
-    if (st.includes('em andamento') || st.includes('analise') || st.includes('em análise') || st.includes('pend')) return 'status-badge warning';
+    if (st.includes('reprov') || st.includes('rejeit') || st.includes('recus')) return 'status-badge danger';
+    if (st.includes('pend') || st.includes('analise') || st.includes('andamento')) return 'status-badge warning';
     if (st.includes('conclu')) return 'status-badge success';
     return 'status-badge warning';
   }
 
-  // Normaliza formatos de anexos em array de { url, name }
   function normalizeAnexosField(anexos) {
     if (!anexos) return [];
     if (typeof anexos === 'string') return [{ url: anexos, name: anexos.split('/').pop() }];
-    if (Array.isArray(anexos)) {
-      return anexos.map(a => {
-        if (typeof a === 'string') return { url: a, name: a.split('/').pop() };
-        return { url: a.url || a.path || a.href || a.file || '', name: a.nome || a.name || (a.url||a.path||'').split('/').pop() || 'anexo' };
-      }).filter(x => x.url);
-    }
-    // objeto simples
-    return [{ url: anexos.url || anexos.path || anexos.href || '', name: anexos.nome || anexos.name || (anexos.url||anexos.path||'').split('/').pop() || 'anexo' }].filter(x => x.url);
+    if (Array.isArray(anexos)) return anexos.map(a => (typeof a === 'string' ? { url: a, name: a.split('/').pop() } : { url: a.url||a.path||a.href||'', name: a.nome||a.name|| (a.url||a.path||'').split('/').pop() })).filter(x => x.url);
+    return [{ url: anexos.url||anexos.path||anexos.href||'', name: anexos.nome||anexos.name|| (anexos.url||anexos.path||'').split('/').pop() }].filter(x => x.url);
   }
 
-  // Normaliza as várias formas de resposta que o backend pode retornar
   function normalizeSolicitacoesResponse(raw) {
     if (!raw) return [];
-    if (Array.isArray(raw)) return raw;
     if (raw.solicitacoes && Array.isArray(raw.solicitacoes)) return raw.solicitacoes;
     if (raw.data && Array.isArray(raw.data)) return raw.data;
     if (raw.items && Array.isArray(raw.items)) return raw.items;
+    if (Array.isArray(raw)) return raw;
     if (raw.solicitacao && typeof raw.solicitacao === 'object' && !Array.isArray(raw.solicitacao)) return [raw.solicitacao];
     if (raw.data && raw.data.solicitacao && typeof raw.data.solicitacao === 'object') return [raw.data.solicitacao];
+    if (raw.success && raw.total !== undefined && raw.solicitacoes === undefined && raw.data === undefined) {
+      if (raw.rows && Array.isArray(raw.rows)) return raw.rows;
+      if (raw.rows && raw.rows.solicitacoes && Array.isArray(raw.rows.solicitacoes)) return raw.rows.solicitacoes;
+    }
     if (typeof raw === 'object') return [raw];
     return [];
   }
 
-  // ------------------ Config e specs ------------------
+  function isFileObject(v) {
+    if (!v) return false;
+    if (typeof File !== 'undefined' && v instanceof File) return true;
+    try { return v.constructor && v.constructor.name === 'File'; } catch (e) { return false; }
+  }
+
   const modalTemplate = document.getElementById('modalTemplate');
 
   const TYPE_LABELS = {
@@ -199,6 +168,11 @@
     reembolso: 'Reembolso',
     outros: 'Outros'
   };
+
+  const CLIENT_ALLOWED_TIPOS = [
+    'ferias','alteracao_dados','consulta_banco_horas','banco_horas',
+    'desligamento','reembolso','outros','reajuste_salarial'
+  ];
 
   const formSpecs = {
     ferias: {
@@ -249,7 +223,69 @@
     }
   };
 
-  // ------------------ Modal de criação ------------------
+  // monta uma descrição clara a partir dos campos do FormData e do tipo
+  function buildDescricaoFromFormData(fd, tipo) {
+    tipo = (tipo || '').toString().toLowerCase();
+    // prefer explicit fields first
+    const explicit = (fd.get('descricao') || fd.get('observacao') || fd.get('justificativa') || '').toString().trim();
+    if (explicit) return explicit;
+
+    // construir por tipo
+    if (tipo === 'ferias') {
+      const di = fd.get('data_inicio') || '—';
+      const df = fd.get('data_fim') || '—';
+      const obs = (fd.get('observacao') || '').toString().trim();
+      return `Período solicitado: ${di} a ${df}${obs ? ' — Observação: ' + obs : ''}`;
+    }
+    if (tipo === 'alteracao_dados') {
+      const campo = fd.get('campo') || 'Campo não especificado';
+      const novo = fd.get('novo_valor') || '';
+      return `Alteração solicitada: ${campo} → ${novo}`.trim();
+    }
+    if (tipo === 'consulta_banco_horas' || tipo === 'banco_horas') {
+      const pi = fd.get('periodo_inicio') || '';
+      const pf = fd.get('periodo_fim') || '';
+      const obs = fd.get('observacao') || '';
+      let s = 'Solicitação de extrato de banco de horas';
+      if (pi || pf) s += ` (${pi || 'início não informado'} → ${pf || 'fim não informado'})`;
+      if (obs) s += ` — Observação: ${obs}`;
+      return s;
+    }
+    if (tipo === 'reajuste_salarial') {
+      const sal = fd.get('salario_solicitado') || '';
+      const just = fd.get('justificativa') || '';
+      return `Salário solicitado: R$ ${sal || '—'}. Justificativa: ${just || '—'}`.trim();
+    }
+    // fallback - tentar juntar campos úteis
+    const titleCandidate = fd.get('titulo') || '';
+    if (titleCandidate) return titleCandidate.toString();
+    return null;
+  }
+
+  // monta um título sensato caso não exista
+  function buildTituloFromFormData(fd, tipo) {
+    tipo = (tipo || '').toString().toLowerCase();
+    if (fd.get('titulo')) return fd.get('titulo').toString();
+    if (tipo === 'ferias') {
+      const di = fd.get('data_inicio') || '';
+      const df = fd.get('data_fim') || '';
+      return `Férias ${di || ''}${(di && df)? ' → ' : ''}${df || ''}`.trim();
+    }
+    if (tipo === 'alteracao_dados') {
+      const campo = fd.get('campo') || '';
+      return `Alteração: ${campo}`.trim();
+    }
+    if (tipo === 'reajuste_salarial') {
+      const sal = fd.get('salario_solicitado') || '';
+      return `Reajuste salarial ${sal ? '– R$ ' + Number(sal).toFixed(2) : ''}`.trim();
+    }
+    if (tipo === 'consulta_banco_horas' || tipo === 'banco_horas') {
+      return 'Consulta - Banco de Horas';
+    }
+    return null;
+  }
+
+  // cria modal de envio
   function openModalFor(typeKey) {
     const spec = formSpecs[typeKey];
     if (!spec || !modalTemplate) { console.warn('Spec/modal inexistente', typeKey); return; }
@@ -280,6 +316,8 @@
       if (f.type === 'textarea') { input = document.createElement('textarea'); input.rows = 4; }
       else if (f.type === 'select') {
         input = document.createElement('select');
+        const placeholderOption = document.createElement('option'); placeholderOption.value = ''; placeholderOption.textContent = 'Selecione...'; placeholderOption.disabled = true; placeholderOption.selected = true;
+        input.appendChild(placeholderOption);
         (f.options || []).forEach(opt => { const o = document.createElement('option'); o.value = opt; o.textContent = opt; input.appendChild(o); });
       } else {
         input = document.createElement('input'); input.type = f.type || 'text';
@@ -292,40 +330,107 @@
       form.appendChild(div);
     });
 
+    // hidden tipo_solicitacao (sempre enviar)
     const hiddenType = document.createElement('input');
-    hiddenType.type = 'hidden'; hiddenType.name = 'tipo'; hiddenType.value = typeKey;
+    hiddenType.type = 'hidden'; hiddenType.name = 'tipo_solicitacao'; hiddenType.value = typeKey;
     form.appendChild(hiddenType);
 
     body.appendChild(form);
     document.body.appendChild(overlay);
 
-    // foco e validação
     const firstInput = form.querySelector('input,textarea,select'); if (firstInput) firstInput.focus();
     function updateSubmitState() { submitBtn.disabled = !form.checkValidity(); }
     form.querySelectorAll('input,textarea,select').forEach(inp => { inp.addEventListener('input', updateSubmitState); inp.addEventListener('change', updateSubmitState); });
     updateSubmitState();
 
-    // envio
     async function onSubmit(e) {
       e.preventDefault();
       submitBtn.disabled = true; msgEl.style.color = ''; msgEl.textContent = 'Enviando...';
 
       try {
-        const fd = new FormData(form);
+        // coleta arquivos do DOM
+        const files = [];
+        form.querySelectorAll('input[type="file"]').forEach(inp => {
+          if (!inp.files) return;
+          for (let i = 0; i < inp.files.length; i++) files.push(inp.files[i]);
+        });
         const maxMB = (window.MAX_UPLOAD_MB || 15);
-        for (const [k, v] of fd.entries()) {
-          if (v instanceof File && v.size && v.size > maxMB * 1024 * 1024) {
-            msgEl.textContent = `Arquivo muito grande. Máx ${maxMB} MB.`;
-            submitBtn.disabled = false; return;
+
+        for (const f of files) {
+          if (f.size && f.size > maxMB * 1024 * 1024) {
+            msgEl.textContent = `Arquivo muito grande. Máx ${maxMB} MB por arquivo.`;
+            submitBtn.disabled = false;
+            return;
           }
         }
 
+        // pega todos os campos originais
+        const originalFD = new FormData(form);
+
+        // normaliza tipo e tratar alias
+        const rawTipo = (originalFD.get('tipo_solicitacao') || '').toString().trim();
+        let tipoNormalized = rawTipo.toLowerCase();
+        if (tipoNormalized === 'banco_horas') tipoNormalized = 'consulta_banco_horas';
+
+        if (!CLIENT_ALLOWED_TIPOS.includes(tipoNormalized)) {
+          msgEl.textContent = 'Tipo de solicitação inválido (cliente). Atualize a página e tente novamente.';
+          submitBtn.disabled = false;
+          console.warn('Tipo inválido no front antes de enviar:', rawTipo);
+          return;
+        }
+
+        // construir controlled FormData (copiar campos não-file)
+        const controlled = new FormData();
+        for (const [k, v] of originalFD.entries()) {
+          if (isFileObject(v)) continue;
+          controlled.append(k, v);
+        }
+
+        // anexar arquivos (campo 'anexos' e primeiro como 'anexo' - backend aceita ambos)
+        files.forEach((f, idx) => {
+          controlled.append('anexos', f);
+          if (idx === 0) controlled.append('anexo', f);
+        });
+
+        // garantir tipo normalized
+        if (!controlled.get('tipo_solicitacao')) controlled.set('tipo_solicitacao', tipoNormalized);
+        else controlled.set('tipo_solicitacao', tipoNormalized);
+
+        // garantir descricao (prioridade: descricao > observacao > justificativa > built)
+        const descricao = buildDescricaoFromFormData(controlled, tipoNormalized);
+        if (descricao) controlled.set('descricao', descricao);
+
+        // garantir titulo caso não exista
+        if (!controlled.get('titulo')) {
+          const tituloGerado = buildTituloFromFormData(controlled, tipoNormalized);
+          if (tituloGerado) controlled.set('titulo', tituloGerado);
+        }
+
+        if (DEBUG) {
+          console.log('DEBUG - controlled FormData to be sent:');
+          for (const e of controlled.entries()) {
+            if (isFileObject(e[1])) console.log(e[0], e[1].name || '[File]');
+            else console.log(e[0], e[1]);
+          }
+        }
+
+        await sendFormData(controlled);
+      } catch (err) {
+        console.error('Erro envio:', err);
+        msgEl.textContent = 'Erro ao preparar o envio. Tente novamente.';
+        submitBtn.disabled = false;
+      }
+    }
+
+    async function sendFormData(formData) {
+      try {
         const res = await fetch(`${API_BASE}/solicitacoes`, {
           method: 'POST',
-          headers: buildAuthHeaders({}), // don't set content-type
-          body: fd,
+          headers: buildAuthHeaders({}), // NÃO setar Content-Type (fetch cuidará)
+          body: formData,
           credentials: 'include'
         });
+
         const data = await safeJsonResponse(res);
         if (!res.ok) {
           const errMsg = (data && (data.erro || data.message)) || `Erro ${res.status}`;
@@ -366,9 +471,8 @@
     overlay.addEventListener('click', (ev) => { if (ev.target === overlay) cleanup(); });
   }
 
-  // ------------------ Modal de visualização ------------------
+  // abrir modal de detalhes (mantive igual)
   async function openViewModal(solicitacaoOrId) {
-    // se recebeu id -> busca e re-chama
     if (typeof solicitacaoOrId === 'string' || typeof solicitacaoOrId === 'number') {
       const id = solicitacaoOrId;
       try {
@@ -379,19 +483,12 @@
         const data = await safeJsonResponse(res) || {};
         const detal = data.solicitacao || data.data || data || {};
         return openViewModal(detal);
-      } catch (err) {
-        console.warn('Erro ao buscar detalhe por id:', err);
-        return; // não mostra modal vazio
-      }
+      } catch (err) { console.warn('Erro ao buscar detalhe por id:', err); return; }
     }
 
     const solicitacao = solicitacaoOrId;
-    if (!solicitacao) {
-      console.warn('Solicitação inválida para visualização');
-      return;
-    }
+    if (!solicitacao) return;
 
-    // remove modais anteriores
     document.querySelectorAll('.modal-overlay').forEach(el => el.remove());
 
     const tipoKey = (solicitacao.tipo || solicitacao.tipo_solicitacao || solicitacao.tipoKey || 'outros').toString().toLowerCase();
@@ -400,7 +497,7 @@
     const dataSolic = solicitacao.created_at || solicitacao.data_solicitacao || solicitacao.data_criacao || solicitacao.createdAt;
     const dataFormatada = formatDateTime(dataSolic);
 
-    const anexos = normalizeAnexosField(solicitacao.anexos || solicitacao.anexo || solicitacao.anexo_path || solicitacao.files || solicitacao.attachment);
+    const anexos = normalizeAnexosField(solicitacao.anexos || solicitacao.anexo || solicitacao.anexo_path || solicitacao.files || solicitacao.attachment || []);
     let anexosHtml = '<p><strong>Anexos:</strong> Nenhum arquivo enviado</p>';
     if (anexos.length) {
       anexosHtml = '<p><strong>Anexos:</strong></p><ul class="anexo-lista">';
@@ -417,25 +514,37 @@
     partes.push(`<p><strong>Status:</strong> ${escapeHtml(status)}</p>`);
     partes.push(`<p><strong>Data da Solicitação:</strong> ${escapeHtml(dataFormatada)}</p>`);
 
-    if (solicitacao.salario_solicitado !== undefined && solicitacao.salario_solicitado !== null) {
-      const num = Number(solicitacao.salario_solicitado);
-      if (!isNaN(num)) partes.push(`<p><strong>Salário Solicitado:</strong> R$ ${num.toFixed(2)}</p>`);
-    }
-    if (solicitacao.campo) partes.push(`<p><strong>Campo a Alterar:</strong> ${escapeHtml(solicitacao.campo)}</p>`);
-    if (solicitacao.novo_valor) partes.push(`<p><strong>Novo Valor:</strong> ${escapeHtml(solicitacao.novo_valor)}</p>`);
-    if (solicitacao.titulo) partes.push(`<p><strong>Título:</strong> ${escapeHtml(solicitacao.titulo)}</p>`);
-    if (solicitacao.descricao) partes.push(`<p><strong>Descrição:</strong><br>${escapeHtml(solicitacao.descricao)}</p>`);
-    if (solicitacao.justificativa) partes.push(`<p><strong>Justificativa:</strong><br>${escapeHtml(solicitacao.justificativa)}</p>`);
-    if (solicitacao.observacao) partes.push(`<p><strong>Observações:</strong><br>${escapeHtml(solicitacao.observacao)}</p>`);
-    if (solicitacao.periodo_inicio) partes.push(`<p><strong>Período Início:</strong> ${escapeHtml(formatDate(solicitacao.periodo_inicio))}</p>`);
-    if (solicitacao.periodo_fim) partes.push(`<p><strong>Período Fim:</strong> ${escapeHtml(formatDate(solicitacao.periodo_fim))}</p>`);
-    if (solicitacao.data_inicio) partes.push(`<p><strong>Data Início:</strong> ${escapeHtml(formatDate(solicitacao.data_inicio))}</p>`);
-    if (solicitacao.data_fim) partes.push(`<p><strong>Data Fim:</strong> ${escapeHtml(formatDate(solicitacao.data_fim))}</p>`);
+    const resumoCampos = [
+      { key: 'titulo', label: 'Título' },
+      { key: 'descricao', label: 'Descrição' },
+      { key: 'observacao', label: 'Observações' },
+      { key: 'justificativa', label: 'Justificativa' },
+      { key: 'novo_valor', label: 'Novo Valor' },
+      { key: 'salario_solicitado', label: 'Salário Solicitado' },
+      { key: 'periodo_inicio', label: 'Período Início' },
+      { key: 'periodo_fim', label: 'Período Fim' },
+      { key: 'data_inicio', label: 'Data Início' },
+      { key: 'data_fim', label: 'Data Fim' }
+    ];
+
+    resumoCampos.forEach(f => {
+      if (solicitacao[f.key] !== undefined && solicitacao[f.key] !== null && String(solicitacao[f.key]).trim() !== '') {
+        if (f.key === 'salario_solicitado') {
+          const num = Number(solicitacao[f.key]);
+          if (!isNaN(num)) partes.push(`<p><strong>${f.label}:</strong> R$ ${num.toFixed(2)}</p>`);
+        } else if (f.key === 'periodo_inicio' || f.key === 'periodo_fim' || f.key === 'data_inicio' || f.key === 'data_fim') {
+          partes.push(`<p><strong>${f.label}:</strong> ${escapeHtml(formatDate(solicitacao[f.key]))}</p>`);
+        } else {
+          partes.push(`<p><strong>${f.label}:</strong> ${escapeHtml(String(solicitacao[f.key]))}</p>`);
+        }
+      }
+    });
+
+    partes.push(anexosHtml);
 
     const corpoDetalhes = `
       <div class="solicitacao-detalhes">
         ${partes.join('')}
-        ${anexosHtml}
       </div>
     `;
 
@@ -455,184 +564,155 @@
     `;
     document.body.appendChild(overlay);
 
-    const modalPanel = overlay.querySelector('.modal-panel');
     const closeBtn = overlay.querySelector('.modal-close');
     const fecharBtn = overlay.querySelector('.fechar-btn');
-
     const closeModal = () => overlay.remove();
     [closeBtn, fecharBtn].forEach(btn => btn && btn.addEventListener('click', closeModal, { once: true }));
     overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
     document.addEventListener('keydown', function onKey(e) { if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', onKey); } });
 
-    if (modalPanel && modalPanel.animate) {
-      modalPanel.animate([{ transform: 'scale(0.95)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 180, easing: 'ease-out' });
-    }
+    const modalPanel = overlay.querySelector('.modal-panel');
+    if (modalPanel && modalPanel.animate) modalPanel.animate([{ transform: 'scale(0.95)', opacity: 0 }, { transform: 'scale(1)', opacity: 1 }], { duration: 180, easing: 'ease-out' });
   }
 
-  // ------------------ Histórico: carregar e renderizar ------------------
-async function carregarHistorico() {
-  const lista = document.getElementById('historyContainer');
-  if (!lista) return;
-  lista.innerHTML = `<div class="loading">⏳ Carregando histórico...</div>`;
+  async function carregarHistorico() {
+    const lista = document.getElementById('historyContainer');
+    if (!lista) return;
+    lista.innerHTML = `<div class="loading">⏳ Carregando histórico...</div>`;
 
-  const endpoints = [
-    `${API_BASE}/solicitacoes/minhas`,
-    `${API_BASE}/solicitacoes/usuario`,
-    `${API_BASE}/solicitacoes/me`,
-    `${API_BASE}/solicitacoes`
-  ];
+    const endpoints = [
+      `${API_BASE}/solicitacoes/me`,
+      `${API_BASE}/solicitacoes/minhas`,
+      `${API_BASE}/solicitacoes/usuario`,
+      `${API_BASE}/solicitacoes`
+    ];
 
-  // normaliza possíveis variantes de tipo para uma chave canônica
+    let normalized = [];
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url, { headers: buildAuthHeaders({ 'Accept': 'application/json' }), credentials: 'include' });
+        if (!res.ok) {
+          if (DEBUG) console.warn('carregarHistorico: endpoint não ok', url, res.status);
+          continue;
+        }
+        const raw = await safeJsonResponse(res);
+        if (!raw) continue;
+        const arr = normalizeSolicitacoesResponse(raw);
+        if (Array.isArray(arr) && arr.length) { normalized = arr; break; }
+      } catch (err) {
+        if (DEBUG) console.warn('Erro tentando endpoint', url, err);
+        continue;
+      }
+    }
+
+    if (!Array.isArray(normalized) || normalized.length === 0) {
+      lista.innerHTML = `<p class="muted">Nenhuma solicitação encontrada.</p>`;
+      return;
+    }
+
+    const withDates = normalized.map(item => {
+      const dataCriacao = item.created_at || item.data_solicitacao || item.data_criacao || item.createdAt || null;
+      const parsed = dataCriacao ? new Date(dataCriacao) : new Date(0);
+      return { item, date: isNaN(parsed) ? new Date(0) : parsed };
+    });
+
+    withDates.sort((a, b) => b.date - a.date);
+    const top3 = withDates.slice(0, 3).map(x => x.item);
+
+    lista.innerHTML = '';
+    top3.forEach(solicitacao => {
+      const rawTipo = solicitacao.tipo || solicitacao.tipo_solicitacao || solicitacao.tipoKey || solicitacao.tipo_label || '';
+      const tipoKey = normalizeTipoKey(rawTipo);
+      const titulo = solicitacao.titulo || TYPE_LABELS?.[tipoKey] || (solicitacao.tipo_label || 'Solicitação');
+      const status = normalizeStatus(solicitacao.status || solicitacao.estado || solicitacao.situacao);
+      const statusClass = statusClassFrom(status);
+      const dataCriacao = solicitacao.created_at || solicitacao.data_solicitacao || solicitacao.data_criacao || solicitacao.createdAt;
+      const dataFormatada = formatDateTime(dataCriacao);
+      const id = solicitacao.id || solicitacao._id || solicitacao.solicitacao_id || solicitacao.id_solicitacao || (solicitacao && solicitacao.usuario_id && solicitacao.usuario_id + '-' + (solicitacao.created_at||'') ) || null;
+
+      const resumo = (
+        solicitacao.resumo ||
+        solicitacao.descricao ||
+        solicitacao.justificativa ||
+        solicitacao.observacao ||
+        solicitacao.novo_valor ||
+        (solicitacao.salario_solicitado ? `Salário: R$ ${Number(solicitacao.salario_solicitado).toFixed(2)}` : '') ||
+        solicitacao.titulo ||
+        ''
+      );
+
+      const card = document.createElement('div');
+      card.className = 'history-item glass-item';
+      card.tabIndex = 0;
+      if (id) card.setAttribute('data-solicitacao-id', id);
+
+      const small = { id, titulo, tipo: tipoKey, status, dataCriacao, resumo };
+      card.setAttribute('data-solicitacao', safeStringify(small, 2000));
+
+      card.innerHTML = `
+        <div class="solicitacao-header">
+          <span class="tipo-solicitacao">${escapeHtml(titulo)}</span>
+          <span class="${statusClass}">${escapeHtml(status)}</span>
+        </div>
+        <div class="solicitacao-body">
+          <small>${escapeHtml(dataFormatada)}</small>
+          ${resumo ? `<div class="resumo">${escapeHtml(resumo)}</div>` : ''}
+        </div>
+        <div class="solicitacao-actions">
+          <button class="btn btn-sm btn-outline view-btn" aria-label="Ver detalhes">🔍 Ver detalhes</button>
+        </div>
+      `;
+      lista.appendChild(card);
+    });
+  }
+
   function normalizeTipoKey(raw) {
     if (!raw && raw !== 0) return 'outros';
     const s = String(raw).toLowerCase().trim();
     if (!s) return 'outros';
-
-    // mapeamentos e heurísticas
     if (/feri/i.test(s)) return 'ferias';
     if (/alterac|alteração|alteracao|update|atualiza/i.test(s)) return 'alteracao_dados';
-    if (/banco.*hora|banc.*hora|banco_horas|consulta_banco_horas|saldo.*hora/i.test(s)) return 'banco_horas';
+    if (/banco.*hora|banco_horas|consulta.*hora|saldo.*hora|consulta_banco_horas/i.test(s)) return 'banco_horas';
     if (/reajust|aument|salari|salário|salario/i.test(s)) return 'reajuste_salarial';
     if (/deslig|rescis/i.test(s)) return 'desligamento';
     if (/reembols|reembolso/i.test(s)) return 'reembolso';
-    // se já for "outros"
     if (/outro|other/i.test(s)) return 'outros';
-
-    // algumas APIs usam chaves com underline/hyphen -> normaliza
     const map = {
       'reajuste-salarial': 'reajuste_salarial',
-      'reajuste_salarial': 'reajuste_salarial',
       'consulta_banco_horas': 'banco_horas',
       'consulta-banco-horas': 'banco_horas',
       'alteracao_dados': 'alteracao_dados',
       'alteracao-dados': 'alteracao_dados'
     };
     if (map[s]) return map[s];
-
-    // fallback: se contém 'salari' ou 'aumento' pegamos reajuste
     if (s.includes('salari') || s.includes('aumento') || s.includes('reajust')) return 'reajuste_salarial';
-
-    // se for uma label amigável (ex.: "Pedido de Aumento"), detecta
-    if (s.includes('aumento') || s.includes('pedido de aumento') || s.includes('pedido aumento')) return 'reajuste_salarial';
-
+    if (s.includes('aumento') || s.includes('pedido de aumento')) return 'reajuste_salarial';
     return 'outros';
   }
 
-  let normalized = [];
-  for (const url of endpoints) {
-    try {
-      const res = await fetch(url, {
-        headers: buildAuthHeaders({ 'Accept': 'application/json' }),
-        credentials: 'include'
-      });
-      if (!res.ok) continue;
-      const raw = await safeJsonResponse(res);
-      if (!raw) continue;
-      const arr = normalizeSolicitacoesResponse(raw);
-      if (Array.isArray(arr)) { normalized = arr; break; }
-    } catch (err) {
-      console.warn('Erro tentando endpoint', url, err);
-      continue;
-    }
-  }
-
-  if (!Array.isArray(normalized) || normalized.length === 0) {
-    lista.innerHTML = `<p class="muted">Nenhuma solicitação encontrada.</p>`;
-    return;
-  }
-
-  // Ordena por data (mais recente primeiro). Usa vários campos possíveis.
-  const withDates = normalized.map(item => {
-    const dataCriacao = item.created_at || item.data_solicitacao || item.data_criacao || item.createdAt || null;
-    const parsed = dataCriacao ? new Date(dataCriacao) : new Date(0);
-    return { item, date: isNaN(parsed) ? new Date(0) : parsed };
-  });
-
-  withDates.sort((a, b) => b.date - a.date);
-
-  // Pegamos apenas os 3 primeiros (últimas 3)
-  const top3 = withDates.slice(0, 3).map(x => x.item);
-
-  lista.innerHTML = '';
-  top3.forEach(solicitacao => {
-    // normaliza/identifica tipo corretamente (corrige bug do reajuste)
-    const rawTipo = solicitacao.tipo || solicitacao.tipo_solicitacao || solicitacao.tipoKey || solicitacao.tipo_label || '';
-    const tipoKey = normalizeTipoKey(rawTipo);
-    const titulo = solicitacao.titulo || TYPE_LABELS?.[tipoKey] || (solicitacao.tipo_label || 'Solicitação');
-    const status = normalizeStatus(solicitacao.status || solicitacao.estado || solicitacao.situacao);
-    const statusClass = statusClassFrom(status);
-    const dataCriacao = solicitacao.created_at || solicitacao.data_solicitacao || solicitacao.data_criacao || solicitacao.createdAt;
-    const dataFormatada = formatDateTime(dataCriacao);
-
-    // id heurístico
-    const id = solicitacao.id || solicitacao._id || solicitacao.solicitacao_id || solicitacao.id_solicitacao || null;
-
-    const card = document.createElement('div');
-    card.className = 'history-item glass-item';
-    card.tabIndex = 0;
-    if (id) card.setAttribute('data-solicitacao-id', id);
-
-    const small = {
-      id,
-      titulo,
-      tipo: tipoKey,
-      status,
-      dataCriacao,
-      resumo: solicitacao.resumo || solicitacao.descricao || solicitacao.titulo || ''
-    };
-    card.setAttribute('data-solicitacao', safeStringify(small, 2000));
-
-    card.innerHTML = `
-      <div class="solicitacao-header">
-        <span class="tipo-solicitacao">${escapeHtml(titulo)}</span>
-        <span class="${statusClass}">${escapeHtml(status)}</span>
-      </div>
-      <div class="solicitacao-body">
-        <small>${escapeHtml(dataFormatada)}</small>
-        ${solicitacao.resumo ? `<div class="resumo">${escapeHtml(solicitacao.resumo)}</div>` : ''}
-      </div>
-      <div class="solicitacao-actions">
-        <button class="btn btn-sm btn-outline view-btn" aria-label="Ver detalhes">🔍 Ver detalhes</button>
-      </div>
-    `;
-    lista.appendChild(card);
-  });
-}
-
-  // ------------------ Delegação única para o histórico ------------------
   function attachHistoryDelegation() {
     const historyContainer = document.getElementById('historyContainer');
     if (!historyContainer) return;
 
-    // clique delegador
     async function historyClickHandler(ev) {
       const item = ev.target.closest('.history-item');
       if (!item) return;
-
       const id = item.getAttribute('data-solicitacao-id');
       if (id) {
         try {
-          const res = await fetch(`${API_BASE}/solicitacoes/${encodeURIComponent(id)}`, {
-            headers: buildAuthHeaders({ 'Accept': 'application/json' }),
-            credentials: 'include'
-          });
+          const res = await fetch(`${API_BASE}/solicitacoes/${encodeURIComponent(id)}`, { headers: buildAuthHeaders({ 'Accept': 'application/json' }), credentials: 'include' });
           const data = await safeJsonResponse(res);
           if (res.ok && data) {
             const detal = data.solicitacao || data.data || data || {};
             return openViewModal(detal);
           }
-        } catch (err) {
-          console.warn('Erro ao buscar detalhe por id:', err);
-        }
+        } catch (err) { if (DEBUG) console.warn('Erro ao buscar detalhe por id:', err); }
       }
-
-      // fallback: usa o snapshot pequeno
       const raw = item.getAttribute('data-solicitacao');
       const small = safeJsonParse(raw) || {};
       openViewModal(small);
     }
 
-    // Enter key abre item
     function historyKeyHandler(ev) {
       if (ev.key !== 'Enter') return;
       const item = ev.target.closest('.history-item');
@@ -640,32 +720,24 @@ async function carregarHistorico() {
       item.click();
     }
 
-    // Garantimos que não adicionamos múltiplos listeners acidentalmente
     historyContainer.removeEventListener('click', historyClickHandler);
     historyContainer.removeEventListener('keydown', historyKeyHandler);
     historyContainer.addEventListener('click', historyClickHandler);
     historyContainer.addEventListener('keydown', historyKeyHandler);
   }
 
-  // ------------------ Inicialização ------------------
   function init() {
     const cardsRow = Array.from(document.querySelectorAll('.sol-card'));
-    // ligar botões de criação de solicitação
     cardsRow.forEach(btn => btn.addEventListener('click', () => openModalFor(btn.dataset.type)));
+
+    const refreshBtn = document.getElementById('refreshHistoryBtn');
+    if (refreshBtn) refreshBtn.addEventListener('click', () => carregarHistorico());
 
     attachHistoryDelegation();
     carregarHistorico();
   }
 
-  // DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 
 })();
 </script>
-
-
-

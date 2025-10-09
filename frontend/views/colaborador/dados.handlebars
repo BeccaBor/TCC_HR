@@ -2,98 +2,132 @@
 
 <link rel="stylesheet" href="/css/dadosColaborador.css">
 
-<div class="cola-layout no-sidebar">
+<div class="cola-layout">
+  {{> sidebarCola }}
+
   <main class="content" role="main" aria-label="Meus dados">
     <header class="page-header">
       <div>
-        <h2>Meus dados</h2>
-        <p>Aqui você pode ver e editar seus dados pessoais</p>
+        <h2>Visualizar Dados</h2>
+        <p>Visualize seus dados pessoais e contratos ativos</p>
       </div>
       <div class="header-actions">
         <div id="dadosAlertContainer" class="alert-container" aria-live="polite"></div>
       </div>
     </header>
 
-    <!-- GRID PRINCIPAL: 3 colunas, todos os blocos são células da grid (sem coluna fixa) -->
+    <!-- STATS (topo) -->
+    <section class="stats-grid">
+      {{!-- <div class="grid-item card stat-card">
+        <div class="stat-title">Dados Pessoais</div>
+        <div id="statDadosPessoais" class="stat-value">0</div>
+        <div class="stat-muted">Perfil completo</div>
+      </div> --}}
+
+      <div class="grid-item card stat-card">
+        <div class="stat-title">Contratos Ativos</div>
+        <div id="statContratosAtivos" class="stat-value">0</div>
+        {{!-- <div class="stat-muted">Em andamento</div> --}}
+      </div>
+
+      <div class="grid-item card stat-card">
+        <div class="stat-title">Última Atualização</div>
+        <div id="statUltAtualizacao" class="stat-value">DD/MM/AAAA</div>
+        {{!-- <div class="stat-muted">Dados sincronizados</div> --}}
+      </div>
+    </section>
+
+    <!-- FORMULARIO PRINCIPAL -->
     <form id="formDadosColaborador" class="grid-dashboard" enctype="multipart/form-data" novalidate>
-      <!-- Card: foto (agora é uma célula igual às outras) -->
-      <div class="grid-item card photo-card" data-label="Foto">
-        <div class="photo-wrap">
-          {{#if usuario.foto}}
-            <img id="previewFoto" src="/uploads/{{usuario.foto}}" alt="Foto de {{usuario.nome}}">
-          {{else}}
-            <img id="previewFoto" src="/img/fundofoda.png" alt="Sem foto">
-          {{/if}}
+      <!-- DADOS PESSOAIS: foto à esquerda + área de 2 colunas (cada coluna com 5 elementos) -->
+      <div class="grid-item card dados-pessoais-card span-3">
+        <h3>Dados Pessoais</h3>
+
+        <!-- coluna da foto (fixa) -->
+        <div class="photo-col">
+          <div class="photo-wrap">
+            {{#if usuario.foto}}
+              <img id="previewFoto" src="/uploads/{{usuario.foto}}" alt="Foto de {{usuario.nome}}">
+            {{else}}
+              <img id="previewFoto" src="/img/fundofoda.png" alt="Sem foto">
+            {{/if}}
+          </div>
+          <div class="photo-meta">
+            <div id="displayName">{{usuario.nome}}</div>
+            <div class="muted">{{usuario.cargo}} • {{usuario.setor}}</div>
+            <div class="muted">Registro: {{usuario.numero_registro}}</div>
+          </div>
         </div>
-        <div class="photo-meta">
-          <div id="displayName">{{usuario.nome}}</div>
-          <div class="muted">{{usuario.cargo}} • {{usuario.setor}}</div>
-          <div class="muted">Registro: {{usuario.numero_registro}}</div>
+
+        <!-- área principal com duas colunas, cada uma com 5 elementos -->
+        <div class="form-area">
+          <div class="form-columns">
+            <!-- COLUNA A (5 elementos): Tipo Jornada -> Horas -> Nome -> Email -> Endereço/Observações -->
+            <div class="col col-a">
+              <div class="field-group">
+                <label class="field-label">Tipo de Jornada</label>
+                <input name="tipo_jornada" class="field-input" type="text" value="{{usuario.tipo_jornada}}" placeholder="Ex: Integral">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Horas diárias</label>
+                <input name="horas_diarias" class="field-input" type="number" min="0" value="{{usuario.horas_diarias}}" placeholder="Ex: 8">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Nome Completo</label>
+                <input id="inputNome" name="nome" class="field-input" type="text" value="{{usuario.nome}}" placeholder="Nome completo">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Email</label>
+                <input id="inputEmail" name="email" class="field-input" type="email" value="{{usuario.email}}" placeholder="usuario@exemplo.com">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Endereço / Observações</label>
+                <input id="inputObs" name="observacao" class="field-input" type="text" value="{{usuario.observacao}}" placeholder="Rua, número, complemento...">
+              </div>
+            </div>
+
+            <!-- COLUNA B (5 elementos): CPF -> Telefone -> Setor -> Cargo -> Registro -->
+            <div class="col col-b">
+              <div class="field-group">
+                <label class="field-label">CPF</label>
+                <input id="inputCpf" name="cpf" class="field-input" type="text" value="{{usuario.cpf}}" placeholder="000.000.000-00">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Telefone</label>
+                <input id="inputTelefone" name="telefone" class="field-input" type="text" value="{{usuario.telefone}}" placeholder="(00) 00000-0000">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Setor</label>
+                <input id="inputSetor" name="setor" class="field-input" type="text" value="{{usuario.setor}}" placeholder="Ex: Financeiro">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Cargo</label>
+                <input id="inputCargo" name="cargo" class="field-input" type="text" value="{{usuario.cargo}}" placeholder="Ex: Analista">
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Registro</label>
+                <input id="inputRegistro" name="numero_registro" class="field-input" type="text" value="{{usuario.numero_registro}}" placeholder="Número de registro">
+              </div>
+            </div>
+          </div>
         </div>
-        <br>
-      </div>
-  
-      <!-- Card: Nome (larga) -->
-      <div class="grid-item card span-2" data-label="Nome">
-        <label class="field-label">Nome completo</label>
-        <input id="inputNome" class="field-input" type="text" name="nome" value="{{usuario.nome}}" required>
       </div>
 
-      <!-- Card: CPF -->
-      <div class="grid-item card" data-label="CPF">
-        <label class="field-label">CPF</label>
-        <input id="inputCpf" class="field-input" type="text" name="cpf" value="{{usuario.cpf}}">
-      </div>
-
-      <!-- Card: Email (larga, ocupa 3 colunas) -->
-      <div class="grid-item card span-3" data-label="Email">
-        <label class="field-label">Email</label>
-        <input id="inputEmail" class="field-input" type="email" name="email" value="{{usuario.email}}">
-      </div>
-
-      <!-- Telefone -->
-      <div class="grid-item card" data-label="Telefone">
-        <label class="field-label">Telefone</label>
-        <input id="inputTelefone" class="field-input" type="text" name="telefone" value="{{usuario.telefone}}">
-      </div>
-
-      <!-- Setor -->
-      <div class="grid-item card" data-label="Setor">
-        <label class="field-label">Setor</label>
-        <input id="inputSetor" class="field-input" type="text" name="setor" value="{{usuario.setor}}">
-      </div>
-
-      <!-- Cargo (span-2) -->
-      <div class="grid-item card span-2" data-label="Cargo">
-        <label class="field-label">Cargo</label>
-        <input id="inputCargo" class="field-input" type="text" name="cargo" value="{{usuario.cargo}}">
-      </div>
-
-      <!-- Jornada -->
-      <div class="grid-item card" data-label="Jornada">
-        <label class="field-label">Jornada</label>
-        <input id="inputJornada" class="field-input" type="text" name="tipo_jornada" value="{{usuario.tipo_jornada}}">
-      </div>
-
-      <!-- Horas diárias -->
-      <div class="grid-item card" data-label="Horas">
-        <label class="field-label">Horas diárias</label>
-        <input id="inputHoras" class="field-input" type="number" min="1" max="24" name="horas_diarias" value="{{usuario.horas_diarias}}">
-      </div>
-
-      <!-- Upload de foto (pequeno) -->
-      <div class="grid-item card" data-label="Foto Upload">
+      <!-- abaixo, cartões menores (se ainda precisar) -->
+      {{!-- <div class="grid-item card" data-label="Upload Foto">
         <label class="field-label">Foto (opcional)</label>
         <input id="inputFoto" class="field-input file-input" type="file" name="foto" accept="image/*">
       </div>
 
-      <!-- Campo extra largo (span-3) para observações/endereço -->
-      <div class="grid-item card span-3" data-label="Observação">
-        <label class="field-label">Observações / Endereço</label>
-        <input id="inputObs" class="field-input" name="observacao" type="text" value="{{usuario.observacao}}">
-      </div>
-
-      <!-- BOTÕES (full width) -->
+      <!-- AÇÕES (full width) -->
       <div class="grid-item actions-row span-3" role="group" aria-label="Ações">
         <div class="actions-inner">
           <div class="obs">Edite seus dados e clique em Salvar</div>
@@ -101,24 +135,70 @@
             <button id="btnSalvarDados" type="submit" class="btn btn-primary">Salvar</button>
           </div>
         </div>
-      </div>
+      </div> --}}
     </form>
+
+    <!-- CONTRATOS (permanece como antes) -->
+    <section class="grid-item card contracts-card span-3" aria-label="Contratos">
+      <h3>Contratos</h3>
+      <div class="contracts-table-wrap">
+        <table class="contracts-table" role="table" aria-label="Lista de contratos">
+          <thead>
+            <tr>
+              <th>Contrato</th>
+              <th>Tipo</th>
+              <th>Data Início</th>
+              <th>Status</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="contractsTableBody">
+            {{#each usuario.contratos}}
+              <tr>
+                <td>
+                  <div class="contrato-id">{{this.numero}}</div>
+                  <div class="contrato-sub">{{this.descricao}}</div>
+                </td>
+                <td>{{this.tipo}}</td>
+                <td>{{this.data_inicio}}</td>
+                <td><span class="badge">{{this.status}}</span></td>
+                <td class="acoes">
+                  <a href="/contrato/{{this.id}}" title="Visualizar">👁️</a>
+                  {{#if this.anexo_path}}
+                    <a href="/uploads/{{this.anexo_path}}" download title="Download">⬇️</a>
+                  {{/if}}
+                </td>
+              </tr>
+            {{/each}}
+          </tbody>
+        </table>
+
+        <div id="noContractsMsg" class="muted" style="display:none; padding: 12px;">Nenhum contrato encontrado.</div>
+      </div>
+    </section>
   </main>
 </div>
 
+
 <script>
-/* Script mantido — preview + sincronização + submit */
+/* Script robusto para carregar/atualizar dados do colaborador */
 (function () {
   const BACKEND_CFG = (typeof window !== 'undefined' && window.BACKEND_URL) ? String(window.BACKEND_URL) : 'http://localhost:3001';
   const API_ORIGIN = BACKEND_CFG.replace(/\/api$/, '');
-  const AUTH_ME = API_ORIGIN + '/api/auth/me';
-  const UPDATE_ENDPOINT = API_ORIGIN + '/colaborador/atualizar';
+  const AUTH_ME = API_ORIGIN + '/api/auth/me'; // se sua rota for diferente, ajuste aqui
+  const UPDATE_ENDPOINT = API_ORIGIN + '/colaborador/atualizar'; // Ajuste se seu endpoint real tiver /api/ prefix
 
   const form = document.getElementById('formDadosColaborador');
   const alertContainer = document.getElementById('dadosAlertContainer');
   const btnSalvar = document.getElementById('btnSalvarDados');
   const previewFoto = document.getElementById('previewFoto');
   const displayName = document.getElementById('displayName');
+
+  const statDadosPessoais = document.getElementById('statDadosPessoais');
+  const statContratosAtivos = document.getElementById('statContratosAtivos');
+  const statUltAtualizacao = document.getElementById('statUltAtualizacao');
+  const contractsTableBody = document.getElementById('contractsTableBody');
+  const noContractsMsg = document.getElementById('noContractsMsg');
 
   function showAlert(message, type = 'info') {
     if (!alertContainer) return;
@@ -130,65 +210,193 @@
     setTimeout(() => { if (alertContainer.contains(el)) alertContainer.removeChild(el); }, 4500);
   }
 
-  // preview foto on select
-  const fotoInput = document.getElementById('inputFoto');
-  fotoInput?.addEventListener('change', (e) => {
+  // procura um elemento do formulário por name ou id
+  function getField(nameOrId) {
+    if (!form) {
+      return document.querySelector(`[name="${nameOrId}"]`) || document.getElementById(nameOrId);
+    }
+    // primeiro tenta pelo name entre os elementos do form
+    const byName = form.elements && form.elements[nameOrId];
+    if (byName) return byName;
+    // fallback geral
+    return document.querySelector(`[name="${nameOrId}"]`) || document.getElementById(nameOrId);
+  }
+
+  // set value safely (para inputs, selects, textareas)
+  function setFieldValue(nameOrId, value) {
+    const el = getField(nameOrId);
+    if (!el) return;
+    // elementos de form podem ser coleção (radiogroup) — tratamos os comuns: input/textarea/select
+    try {
+      if ('value' in el) {
+        el.value = (value === null || typeof value === 'undefined') ? '' : String(value);
+      } else if (el.length && el[0] && 'value' in el[0]) { // ex.: HTMLCollection
+        // set no primeiro elemento
+        el[0].value = (value === null || typeof value === 'undefined') ? '' : String(value);
+      }
+    } catch (e) {
+      console.warn('Falha ao setar valor em', nameOrId, e);
+    }
+  }
+
+  // listeners para preview de foto
+  const fotoInput = getField('foto') || document.getElementById('inputFoto');
+  fotoInput?.addEventListener?.('change', (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    previewFoto.src = URL.createObjectURL(file);
+    if (previewFoto) previewFoto.src = URL.createObjectURL(file);
   });
 
   async function refreshUsuarioFromApi() {
     const token = localStorage.getItem('token');
-    if (!token) return;
+    if (!token) {
+      console.warn('Token não encontrado no localStorage.');
+      return;
+    }
     try {
       const res = await fetch(AUTH_ME, { headers: { Authorization: 'Bearer ' + token } });
-      if (!res.ok) { localStorage.removeItem('token'); return; }
+      if (!res.ok) {
+        console.warn('Resposta não OK do auth/me:', res.status);
+        localStorage.removeItem('token');
+        return;
+      }
       const j = await res.json();
-      const usuario = j.usuario || j.data || {};
-      // populate inputs
-      document.getElementById('inputNome').value = usuario.nome || '';
-      document.getElementById('inputCpf').value = usuario.cpf || '';
-      document.getElementById('inputEmail').value = usuario.email || '';
-      document.getElementById('inputTelefone').value = usuario.telefone || '';
-      document.getElementById('inputSetor').value = usuario.setor || '';
-      document.getElementById('inputCargo').value = usuario.cargo || '';
-      document.getElementById('inputJornada').value = usuario.tipo_jornada || '';
-      document.getElementById('inputHoras').value = usuario.horas_diarias || '';
-      if (usuario.foto) previewFoto.src = '/uploads/' + usuario.foto;
+      // tenta normalizar onde o usuario pode estar
+      const usuario = (j && (j.usuario || j.data || j)) || {};
+
+      // debug: mostra no console o objeto recebido (remova em production)
+      console.debug('Usuario recebido do backend:', usuario);
+
+      // Mapeamento direto com campos da tabela `usuario` (ver seu dump SQL)
+      setFieldValue('nome', usuario.nome || usuario.Nome || '');
+      setFieldValue('cpf', usuario.cpf || '');
+      setFieldValue('email', usuario.email || '');
+      setFieldValue('telefone', usuario.telefone || usuario.telefone_celular || '');
+      setFieldValue('setor', usuario.setor || usuario.nome_setor || '');
+      setFieldValue('cargo', usuario.cargo || '');
+      setFieldValue('tipo_jornada', usuario.tipo_jornada || usuario.jornada || '');
+      setFieldValue('horas_diarias', usuario.horas_diarias ?? usuario.horas ?? '');
+      setFieldValue('observacao', usuario.observacao || usuario.endereco || '');
+      setFieldValue('numero_registro', usuario.numero_registro || usuario.registro || '');
+
+      // IDs que seu template pode conter (backwards compat)
+      setFieldValue('inputNome', usuario.nome || '');
+      setFieldValue('inputCpf', usuario.cpf || '');
+      setFieldValue('inputEmail', usuario.email || '');
+      setFieldValue('inputTelefone', usuario.telefone || '');
+      setFieldValue('inputSetor', usuario.setor || '');
+      setFieldValue('inputCargo', usuario.cargo || '');
+      setFieldValue('inputJornada', usuario.tipo_jornada || '');
+      setFieldValue('inputHoras', usuario.horas_diarias ?? '');
+      setFieldValue('inputObs', usuario.observacao || '');
+
+      // preview / display name
+      if (usuario.foto && previewFoto) {
+        // se já vier com caminho relativo, não prefixa duas vezes
+        previewFoto.src = usuario.foto.startsWith('/uploads/') ? usuario.foto : '/uploads/' + usuario.foto;
+      }
       if (displayName && usuario.nome) displayName.textContent = usuario.nome;
+
+      // stats
+      if (statDadosPessoais) statDadosPessoais.textContent = (usuario.nome ? 1 : 0);
+      const contratos = Array.isArray(usuario.contratos) ? usuario.contratos : (Array.isArray(j.contratos) ? j.contratos : []);
+      if (statContratosAtivos) {
+        statContratosAtivos.textContent = contratos.filter(c => {
+          const s = (c.status || c.situacao || '').toString().toLowerCase();
+          return s === 'ativo' || s.includes('andamento') || s === 'em andamento';
+        }).length;
+      }
+      if (statUltAtualizacao) statUltAtualizacao.textContent = usuario.atualizado_em ? new Date(usuario.atualizado_em).toLocaleDateString() : (usuario.data_criacao ? new Date(usuario.data_criacao).toLocaleDateString() : 'DD/MM/AAAA');
+
+      // render contratos
+      renderContratos(contratos);
     } catch (err) {
       console.warn('Falha ao atualizar dados do usuário:', err);
     }
+  }
+
+  function renderContratos(contratos = []) {
+    if (!contractsTableBody) return;
+    contractsTableBody.innerHTML = '';
+    if (!contratos.length) {
+      if (noContractsMsg) noContractsMsg.style.display = 'block';
+      return;
+    }
+    if (noContractsMsg) noContractsMsg.style.display = 'none';
+
+    contratos.forEach(c => {
+      const tr = document.createElement('tr');
+
+      const tdContrato = document.createElement('td');
+      tdContrato.innerHTML = `<div class="contrato-id">${c.numero || c.codigo || c.id || 'LL-0000-000'}</div>
+                              <div class="contrato-sub">${c.descricao || c.subtipo || c.titulo || ''}</div>`;
+      tr.appendChild(tdContrato);
+
+      const tdTipo = document.createElement('td');
+      tdTipo.textContent = c.tipo || c.periodicidade || '';
+      tr.appendChild(tdTipo);
+
+      const tdData = document.createElement('td');
+      tdData.textContent = c.data_inicio || c.inicio || c.created_at || 'DD/MM/AAAA';
+      tr.appendChild(tdData);
+
+      const tdStatus = document.createElement('td');
+      tdStatus.innerHTML = `<span class="badge">${c.status || c.situacao || 'Ativo'}</span>`;
+      tr.appendChild(tdStatus);
+
+      const tdAcoes = document.createElement('td');
+      tdAcoes.className = 'acoes';
+      const viewLink = document.createElement('a');
+      viewLink.href = `/contrato/${c.id || c.numero || ''}`;
+      viewLink.title = 'Visualizar';
+      viewLink.textContent = '👁️';
+      tdAcoes.appendChild(viewLink);
+
+      if (c.anexo_path || c.caminho_arquivo) {
+        const anexo = c.anexo_path || c.caminho_arquivo;
+        const dl = document.createElement('a');
+        dl.href = anexo.startsWith('/uploads/') ? anexo : `/uploads/${anexo}`;
+        dl.download = '';
+        dl.title = 'Download';
+        dl.textContent = '⬇️';
+        dl.style.marginLeft = '8px';
+        tdAcoes.appendChild(dl);
+      }
+
+      tr.appendChild(tdAcoes);
+      contractsTableBody.appendChild(tr);
+    });
   }
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
     if (!btnSalvar) return;
     btnSalvar.disabled = true;
+    const originalText = btnSalvar.textContent;
     btnSalvar.textContent = 'Salvando...';
 
     const token = localStorage.getItem('token');
     if (!token) {
       showAlert('Usuário não autenticado.', 'danger');
       btnSalvar.disabled = false;
-      btnSalvar.textContent = 'Salvar';
+      btnSalvar.textContent = originalText || 'Salvar';
       return window.location.href = '/';
     }
 
     try {
       const fd = new FormData();
-      fd.append('nome', document.getElementById('inputNome').value || '');
-      fd.append('cpf', document.getElementById('inputCpf').value || '');
-      fd.append('email', document.getElementById('inputEmail').value || '');
-      fd.append('telefone', document.getElementById('inputTelefone').value || '');
-      fd.append('setor', document.getElementById('inputSetor').value || '');
-      fd.append('cargo', document.getElementById('inputCargo').value || '');
-      fd.append('tipo_jornada', document.getElementById('inputJornada').value || '');
-      fd.append('horas_diarias', document.getElementById('inputHoras').value || '');
-      fd.append('observacao', document.getElementById('inputObs')?.value || '');
+      // pega todos os campos diretamente pelos nomes esperados no backend
+      const fields = ['nome','cpf','email','telefone','setor','cargo','tipo_jornada','horas_diarias','observacao','numero_registro'];
+      fields.forEach(fn => {
+        const el = getField(fn);
+        if (!el) return;
+        // se for HTMLCollection e input[0], pega value do primeiro
+        const val = ('value' in el) ? el.value : (el[0] && 'value' in el[0] ? el[0].value : '');
+        fd.append(fn, val ?? '');
+      });
 
-      const fotoEl = document.getElementById('inputFoto');
+      // file
+      const fotoEl = getField('foto') || getField('inputFoto') || document.getElementById('inputFoto');
       if (fotoEl && fotoEl.files && fotoEl.files[0]) fd.append('foto', fotoEl.files[0]);
 
       const res = await fetch(UPDATE_ENDPOINT, {
@@ -204,21 +412,24 @@
 
       if (res.ok) {
         showAlert('Dados atualizados com sucesso!', 'success');
-        const novoNome = document.getElementById('inputNome').value || '';
+        const novoNome = getField('nome')?.value || getField('inputNome')?.value;
         if (displayName && novoNome) displayName.textContent = novoNome;
+        // recarrega dados do back-end (com pequena espera para o processamento)
         setTimeout(() => refreshUsuarioFromApi(), 700);
       } else {
         showAlert(data.message || 'Falha ao atualizar dados.', 'danger');
+        console.warn('Resposta de erro ao atualizar:', res.status, data);
       }
     } catch (err) {
       console.error('Erro ao atualizar dados:', err);
       showAlert('Erro de conexão com o servidor.', 'danger');
     } finally {
       btnSalvar.disabled = false;
-      btnSalvar.textContent = 'Salvar';
+      btnSalvar.textContent = originalText || 'Salvar';
     }
   });
 
   document.addEventListener('DOMContentLoaded', () => { refreshUsuarioFromApi(); });
 })();
 </script>
+
