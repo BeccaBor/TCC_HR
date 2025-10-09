@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* === Global background via CSS variable (site-wide) === */
 :root {
   /* valor default — altere para o seu padrão */
@@ -29,6 +30,19 @@ body {
   --text-muted: rgba(255, 255, 255, 0.7);
 }
 
+=======
+/* ===== Variáveis Navbar Liquid Glass ===== */
+:root {
+  --nav-height: 70px;
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --backdrop-blur: 20px;
+  --text: rgba(255, 255, 255, 0.96);
+  --text-muted: rgba(255, 255, 255, 0.7);
+}
+
+>>>>>>> 6b87195aa484949252696aec9f7ee8b671b5fbfd
 /* ===== Navbar Glass Effect ===== */
 .navbar-cola,
 .navbar-gestor {
@@ -396,6 +410,7 @@ body {
   .nav-item, .btnNav, .btn-profile, #btnMenu {
     transition: none;
   }
+<<<<<<< HEAD
 }
 /* ===== BG PICKER (modal/panel) - Adicione ao final do navbar.css ===== */
 .bgpicker-overlay {
@@ -523,4 +538,6 @@ body {
   .bg-thumb img { 
     height: 84px; 
   }
+=======
+>>>>>>> 6b87195aa484949252696aec9f7ee8b671b5fbfd
 }

@@ -12,7 +12,12 @@ const routes = require('./routes'); // API router (index.js)
 const colaboradorRoutes = require('./routes/colaboradorRoutes'); // views router
 const uploadRoutes = require('./routes/uploadRoutes');
 const app = express();
+// no arquivo principal (server.js ou app.js)
+const gestorApiRoutes = require('./routes/gestorApiRoutes');
+const gestorViewsRoutes = require('./routes/gestorViewsRoutes');
 
+// app.use('/api/gestor', gestorApiRoutes);
+// app.use('/gestor', gestorViewsRoutes);
 /* ------------------ Security, CORS, Parsers ------------------ */
 try {
   const helmet = require('helmet');
@@ -334,6 +339,13 @@ app.use((err, req, res, next) => {
   // não é MulterError — propaga
   return next(err);
 });
+// monta API do gestor em /api/gestor (APIs JSON, sem conflitar com /api principal)
+app.use('/api/gestor', gestorApiRoutes);
+
+// monta views do gestor (templates) em /gestor
+app.use('/gestor', gestorViewsRoutes);
+
+
 // Views do colaborador (mount)
 app.use('/colaborador', colaboradorRoutes);
 

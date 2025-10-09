@@ -75,3 +75,62 @@
 </div>
 
 <script src="/public/js/folhapaga.js"></script>
+<link rel="stylesheet" href="../css/folhapaga.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+<div class="page-wrapper">
+  {{> navbar }}
+  <div class="cola-layout">
+    <main class="p-4">
+      <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+          <h1 class="text-white mb-2">Folha de Pagamento - {{colaborador.nome}}</h1>
+          <p style="color: rgba(255,255,255,0.7);">Editar dados para cálculo</p>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <form id="form-folha" method="post" action="/api/gestor/calcular">
+          <input type="hidden" name="usuarioId" value="{{colaborador.id}}">
+          <div class="mb-3">
+            <label>Salário Bruto</label>
+            <input name="salarioBruto" type="number" step="0.01" class="glass-input" value="{{colaborador.salario}}">
+          </div>
+
+          <!-- adicione aqui outros campos que queira (horas extras, descontos, VT etc.) -->
+          <div class="d-grid mt-3">
+            <button type="submit" class="glass-button-primary">Calcular Folha</button>
+          </div>
+        </form>
+
+        <div id="resultado" class="mt-4"></div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script>
+  // intercepta submissão e mostra resultado sem recarregar (opcional)
+  document.getElementById('form-folha')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+    const payload = Object.fromEntries(data);
+    try {
+      const resp = await fetch('/api/gestor/calcular', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const json = await resp.json();
+      if (json && json.success) {
+        document.getElementById('resultado').innerText = JSON.stringify(json.result, null, 2);
+      } else {
+        document.getElementById('resultado').innerText = 'Erro no cálculo';
+      }
+    } catch (err) {
+      console.error(err);
+      document.getElementById('resultado').innerText = 'Erro';
+    }
+  });
+</script>
